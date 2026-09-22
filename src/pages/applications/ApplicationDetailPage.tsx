@@ -29,7 +29,7 @@ export function ApplicationDetailPage() {
   const similar = (allApplications.data ?? []).filter((a) => a.id !== app.id && app.job_type_id && a.job_type_id === app.job_type_id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title={`${app.companies?.name} — ${app.job_title}`}
         description={app.job_posting_url ?? undefined}
@@ -53,8 +53,8 @@ export function ApplicationDetailPage() {
         }
       />
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <StatusBadge status={app.status} />
+      <div className="flex items-center gap-2 flex-wrap -mt-2">
+        {app.status === "archived" && <StatusBadge status={app.status} />}
         {app.job_types?.name && <Badge variant="secondary">{app.job_types.name}</Badge>}
         {app.date_applied && <Badge variant="outline">Applied {app.date_applied}</Badge>}
       </div>
@@ -76,7 +76,7 @@ export function ApplicationDetailPage() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Application Wordings</h2>
+          <h2 className="text-base font-semibold text-foreground">Application Wordings</h2>
           <AddApplicationWordingDialog jobApplicationId={app.id} />
         </div>
         <div className="space-y-3">

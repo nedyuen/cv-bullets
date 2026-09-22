@@ -73,7 +73,7 @@ export function CompoundRelationshipsCard({ achievementId }: { achievementId: st
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
             <p className="text-xs font-medium text-muted-foreground">Components (this is a Compound Achievement of)</p>
             <EditComponentsDialog achievementId={achievementId} currentComponentIds={(components.data ?? []).map((c) => c.id)} />
           </div>

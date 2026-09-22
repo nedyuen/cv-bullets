@@ -33,16 +33,16 @@ export function ApplicationsPage() {
         {(applications.data ?? []).map((app) => (
           <Link key={app.id} to={`/applications/${app.id}`}>
             <Card className="hover:border-primary/50 transition-colors">
-              <CardContent className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium text-sm">
+              <CardContent className="flex items-center justify-between py-2.5">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-foreground truncate">
                     {app.companies?.name} — {app.job_title}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {app.job_types?.name ?? "No Job Type"} {app.date_applied && `· Applied ${app.date_applied}`}
                   </p>
                 </div>
-                <StatusBadge status={app.status} />
+                {app.status === "archived" && <StatusBadge status={app.status} />}
               </CardContent>
             </Card>
           </Link>

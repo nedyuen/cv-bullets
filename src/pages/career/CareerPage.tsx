@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Archive, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, Archive, RotateCcw, Pencil } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
 import { StatusBadge } from "@/components/common/status-badge";
 import { CompanyFormDialog } from "@/components/career/company-form-dialog";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCompanies, useUpdateCompany } from "@/hooks/useCompanies";
-import { useCareerRoles, useUpdateCareerRole } from "@/hooks/useCareerRoles";
+import { useCareerRoles, useUpdateCareerRole, type CareerRoleWithCompany } from "@/hooks/useCareerRoles";
 import { useProjects, useProjectAchievementCounts, useUpdateProject } from "@/hooks/useProjects";
 import type { Status } from "@/types/database";
 import { Link } from "react-router-dom";
@@ -20,6 +20,7 @@ function ArchiveToggleButton({ status, onToggle }: { status: Status; onToggle: (
     <Button
       size="sm"
       variant="ghost"
+      aria-label={status === "active" ? "Archive" : "Restore"}
       onClick={(e) => {
         e.stopPropagation();
         onToggle();
@@ -52,14 +53,14 @@ function CompanyNode({
       <div
         role="button"
         tabIndex={0}
-        className="flex w-full items-center justify-between p-4 cursor-pointer"
+        className="flex w-full items-center justify-between p-3.5 cursor-pointer"
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen((o) => !o)}
       >
         <div className="flex items-center gap-2">
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          <span className="font-medium">{companyName}</span>
-          <StatusBadge status={companyStatus} />
+          {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          <span className="font-semibold text-sm text-foreground">{companyName}</span>
+          {companyStatus === "archived" && <StatusBadge status={companyStatus} />}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{roles.data?.length ?? 0} role(s)</span>
@@ -72,15 +73,7 @@ function CompanyNode({
       {open && (
         <CardContent className="pt-0 space-y-2">
           {(roles.data ?? []).map((role) => (
-            <RoleNode
-              key={role.id}
-              roleId={role.id}
-              title={role.title}
-              status={role.status}
-              startDate={role.start_date}
-              endDate={role.end_date}
-              includeArchived={includeArchived}
-            />
+            <RoleNode key={role.id} role={role} includeArchived={includeArchived} />
           ))}
           {roles.data?.length === 0 && <p className="text-sm text-muted-foreground pl-6">No Career Roles yet.</p>}
         </CardContent>
@@ -89,57 +82,59 @@ function CompanyNode({
   );
 }
 
-function RoleNode({
-  roleId,
-  title,
-  status,
-  startDate,
-  endDate,
-  includeArchived,
-}: {
-  roleId: string;
-  title: string;
-  status: Status;
-  startDate: string | null;
-  endDate: string | null;
-  includeArchived: boolean;
-}) {
+function RoleNode({ role, includeArchived }: { role: CareerRoleWithCompany; includeArchived: boolean }) {
   const [open, setOpen] = useState(false);
-  const projects = useProjects(includeArchived, roleId);
+  const projects = useProjects(includeArchived, role.id);
   const counts = useProjectAchievementCounts();
   const updateRole = useUpdateCareerRole();
   const updateProject = useUpdateProject();
 
   return (
     <div className="rounded-md border pl-4">
-      <div
-        role="button"
-        tabIndex={0}
-        className="flex w-full items-center justify-between p-2.5 cursor-pointer"
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen((o) => !o)}
-      >
-        <div className="flex items-center gap-2">
-          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-          <span className="text-sm font-medium">{title}</span>
-          <StatusBadge status={status} />
+      {/* The toggle row and the actions row are SIBLINGS, not parent/child — the
+          Edit dialogs are portaled, but React still bubbles their synthetic
+          events through the *React* tree, not the DOM tree. Nesting a dialog
+          inside the toggle's onClick ancestor would re-fire the toggle on every
+          click inside the dialog (e.g. "Save Changes" would also collapse the row). */}
+      <div className="flex w-full flex-col sm:flex-row sm:items-start justify-between gap-2 p-2.5">
+        <div
+          role="button"
+          tabIndex={0}
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => setOpen((o) => !o)}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen((o) => !o)}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+            <span className="text-sm font-medium text-foreground">{role.title}</span>
+            {role.status === "archived" && <StatusBadge status={role.status} />}
+            <span className="text-xs text-muted-foreground">
+              {role.start_date ?? "?"} – {role.end_date ?? "present"}
+            </span>
+          </div>
+          {role.description && <p className="text-sm text-muted-foreground mt-1 pl-5">{role.description}</p>}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {startDate ?? "?"} – {endDate ?? "present"}
-          </span>
-          <ArchiveToggleButton status={status} onToggle={() => updateRole.mutate({ id: roleId, status: status === "active" ? "archived" : "active" })} />
+        <div className="flex items-center gap-1.5 shrink-0 pl-5 sm:pl-0">
+          <CareerRoleFormDialog
+            careerRole={role}
+            trigger={
+              <Button size="sm" variant="ghost" aria-label="Edit Career Role">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            }
+          />
+          <ArchiveToggleButton status={role.status} onToggle={() => updateRole.mutate({ id: role.id, status: role.status === "active" ? "archived" : "active" })} />
         </div>
       </div>
       {open && (
         <div className="pl-6 pb-2 space-y-1">
           {(projects.data ?? []).map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-accent">
-              <Link to="/projects" className="flex-1">
+            <div key={p.id} className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
+              <Link to="/projects" className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
                 <span>{p.name}</span>
-                <StatusBadge status={p.status} />
+                {p.status === "archived" && <StatusBadge status={p.status} />}
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-xs text-muted-foreground">{counts.data?.get(p.id) ?? 0} achievement(s)</span>
                 <ArchiveToggleButton status={p.status} onToggle={() => updateProject.mutate({ id: p.id, status: p.status === "active" ? "archived" : "active" })} />
               </div>

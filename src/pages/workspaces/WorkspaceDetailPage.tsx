@@ -49,7 +49,7 @@ export function WorkspaceDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title={w.name}
         actions={

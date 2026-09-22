@@ -9,9 +9,9 @@ import { useJobTypes } from "@/hooks/useSettings";
 function StatCard({ label, value }: { label: string; value: number | undefined }) {
   return (
     <Card>
-      <CardContent className="pt-4">
-        <p className="text-2xl font-semibold">{value ?? "—"}</p>
-        <p className="text-xs text-muted-foreground mt-1">{label}</p>
+      <CardContent className="pt-3.5">
+        <p className="text-2xl font-semibold tabular-nums text-foreground">{value ?? "—"}</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mt-1">{label}</p>
       </CardContent>
     </Card>
   );

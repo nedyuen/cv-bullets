@@ -33,15 +33,15 @@ export function WorkspacesPage() {
         {(workspaces.data ?? []).map((w) => (
           <Link key={w.id} to={`/workspaces/${w.id}`}>
             <Card className="hover:border-primary/50 transition-colors">
-              <CardContent className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium text-sm">{w.name}</p>
-                  <p className="text-xs text-muted-foreground">
+              <CardContent className="flex items-center justify-between py-2.5">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-foreground truncate">{w.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {w.job_types?.name ?? "No target Job Type"}
                     {w.job_applications && ` · Linked to ${w.job_applications.companies?.name} — ${w.job_applications.job_title}`}
                   </p>
                 </div>
-                <StatusBadge status={w.status} />
+                {w.status === "archived" && <StatusBadge status={w.status} />}
               </CardContent>
             </Card>
           </Link>

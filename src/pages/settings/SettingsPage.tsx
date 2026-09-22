@@ -125,7 +125,7 @@ export function SettingsPage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(tags.data ?? []).map((t) => (
-                  <span key={t.id} className="rounded-full border px-3 py-1 text-xs">
+                  <span key={t.id} className="rounded-md border border-border bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">
                     {t.name}
                   </span>
                 ))}

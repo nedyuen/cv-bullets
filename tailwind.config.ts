@@ -51,6 +51,11 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Opt-in accent typeface — not applied anywhere by default.
+        serif: ["\"Source Serif 4\"", "ui-serif", "Georgia", "serif"],
+      },
     },
   },
   plugins: [animate],

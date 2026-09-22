@@ -56,7 +56,7 @@ export function WorkspaceItemRow({
 
   return (
     <Card ref={setNodeRef} style={style}>
-      <CardContent className="py-3">
+      <CardContent className="py-2.5">
         <div className="flex gap-3">
           <button className="mt-1 cursor-grab text-muted-foreground touch-none" {...attributes} {...listeners}>
             <GripVertical className="h-4 w-4" />

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
 import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
 import { JobTypeBadges } from "@/components/achievements/job-type-badges";
@@ -20,6 +20,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { useRelevantJobTypesMap } from "@/hooks/useRelevantJobTypes";
 import { useMasterWordingsForAchievements } from "@/hooks/useMasterWordings";
 import { useCompoundAchievementIds } from "@/hooks/useCompoundAchievements";
+import { cn } from "@/lib/utils";
 
 const ANY = "__any__";
 const YES = "__yes__";
@@ -45,6 +46,7 @@ export function AchievementsPage() {
   const [hasApplicationWording, setHasApplicationWording] = useState<string>(ANY);
   const [usedInWorkspace, setUsedInWorkspace] = useState<string>(ANY);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const jobTypes = useJobTypes();
   const competencies = useCompetencies();
@@ -68,6 +70,20 @@ export function AchievementsPage() {
     usedInWorkspace: triState(usedInWorkspace),
   };
 
+  const activeFilterCount = [
+    jobTypeId !== ANY,
+    competencyId !== ANY,
+    companyId !== ANY,
+    careerRoleId !== ANY,
+    projectId !== ANY,
+    tagId !== ANY,
+    mandatoryOnly,
+    includeArchived,
+    hasMasterWording !== ANY,
+    hasApplicationWording !== ANY,
+    usedInWorkspace !== ANY,
+  ].filter(Boolean).length;
+
   const achievements = useAchievements(filters);
   const ids = useMemo(() => (achievements.data ?? []).map((a) => a.id), [achievements.data]);
   const relevantJobTypes = useRelevantJobTypesMap(ids);
@@ -89,17 +105,34 @@ export function AchievementsPage() {
       <PageHeader title="Achievements" description="Your searchable library of professional accomplishments." actions={<AchievementFormDialog />} />
 
       <Card className="mb-4">
-        <CardContent className="pt-4 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-8"
-              placeholder="Search Achievement fields, Master/Application Wording text, Tags, Competencies, Project, Career Role, Company..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        <CardContent className="pt-3.5 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                placeholder="Search Achievements, Wordings, Tags, Competencies, Project, Company..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="md:hidden shrink-0"
+              onClick={() => setFiltersOpen((o) => !o)}
+              aria-expanded={filtersOpen}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-0.5 px-1">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className={cn("grid grid-cols-2 gap-2 md:grid-cols-4", filtersOpen ? "grid" : "hidden md:grid")}>
             <Select value={jobTypeId} onValueChange={setJobTypeId}>
               <SelectTrigger><SelectValue placeholder="Job Type" /></SelectTrigger>
               <SelectContent>
@@ -178,41 +211,41 @@ export function AchievementsPage() {
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {(achievements.data ?? []).map((a) => {
           const isOpen = expanded.has(a.id);
           const wordings = (masterWordings.data ?? []).filter((w) => w.achievement_id === a.id);
           return (
             <Card key={a.id}>
-              <CardContent className="py-3">
-                <div className="flex items-start justify-between gap-3">
+              <CardContent className="py-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
                   {/* A <div role="button"> here, not a native <button> — this row contains a
                       nested <Link> (anchor), and interactive content can't nest inside <button>. */}
                   <div
                     role="button"
                     tabIndex={0}
-                    className="flex items-start gap-2 text-left flex-1 cursor-pointer"
+                    className="flex items-start gap-2 text-left flex-1 min-w-0 cursor-pointer"
                     onClick={() => toggleExpand(a.id)}
                     onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggleExpand(a.id)}
                   >
-                    {isOpen ? <ChevronDown className="h-4 w-4 mt-0.5 shrink-0" /> : <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" />}
-                    <div className="flex-1">
+                    {isOpen ? <ChevronDown className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />}
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Link to={`/achievements/${a.id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
+                        <Link to={`/achievements/${a.id}`} className="font-semibold text-sm text-foreground hover:underline" onClick={(e) => e.stopPropagation()}>
                           {a.subject}
                         </Link>
-                        <span className="text-xs text-muted-foreground font-mono">{a.id.slice(0, 8)}</span>
-                        <MandatoryBadge mandatory={a.mandatory} />
-                        <StatusBadge status={a.status} />
+                        {a.mandatory && <MandatoryBadge mandatory={a.mandatory} />}
                         {compoundIds.data?.has(a.id) && <Badge variant="secondary">Compound</Badge>}
+                        {a.status === "archived" && <StatusBadge status={a.status} />}
+                        <span className="hidden sm:inline text-[11px] text-muted-foreground font-mono ml-auto shrink-0">{a.id.slice(0, 8)}</span>
                       </div>
-                      {a.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{a.description}</p>}
-                      <div className="mt-2">
+                      {a.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2 sm:line-clamp-1">{a.description}</p>}
+                      <div className="mt-1.5">
                         <JobTypeBadges relevant={relevantJobTypes.data?.get(a.id)} jobTypesById={jobTypesById} />
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 pl-6 sm:pl-0">
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/achievements/${a.id}`}>Open</Link>
                     </Button>
@@ -221,7 +254,7 @@ export function AchievementsPage() {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-3 pl-6 space-y-2 border-l">
+                  <div className="mt-2.5 pl-6 space-y-2 border-l">
                     <p className="text-xs font-medium text-muted-foreground pl-3">Master Wordings</p>
                     {wordings.length === 0 && <p className="text-sm text-muted-foreground pl-3">No Master Wordings yet.</p>}
                     {wordings.map((w) => (

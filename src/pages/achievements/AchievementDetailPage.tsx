@@ -57,7 +57,7 @@ export function AchievementDetailPage() {
   const a = achievement.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title={a.subject}
         description={`ID: ${a.id}`}
@@ -81,80 +81,75 @@ export function AchievementDetailPage() {
         }
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 -mt-2">
         <MandatoryBadge mandatory={a.mandatory} />
         <StatusBadge status={a.status} />
       </div>
 
+      {/* Career context, achievement information and classification are grouped
+          into one card with internal dividers rather than three separate
+          bordered boxes — same information, less card sprawl. */}
       <Card>
-        <CardHeader>
-          <CardTitle>Career Context</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          {(classification.data?.projectIds ?? []).map((pid) => (
-            <ProjectContextRow key={pid} projectId={pid} />
-          ))}
-          {classification.data?.projectIds.length === 0 && <p className="text-sm text-muted-foreground">No Projects linked.</p>}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Achievement Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-            <p className="text-sm">{a.description || "—"}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Significance &amp; Impact</p>
-            <p className="text-sm">{a.significance_impact || "—"}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Feedback</p>
-            <p className="text-sm">{a.feedback || "—"}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Classification</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Competencies</p>
-            <div className="flex flex-wrap gap-1">
-              {(classification.data?.competencyIds ?? []).map((cid) => (
-                <Badge key={cid} variant="secondary">
-                  {competencies.data?.find((c) => c.id === cid)?.name ?? cid}
-                </Badge>
+        <div className="divide-y divide-border">
+          <div className="p-3.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Career Context</p>
+            <div className="space-y-1">
+              {(classification.data?.projectIds ?? []).map((pid) => (
+                <ProjectContextRow key={pid} projectId={pid} />
               ))}
-              {classification.data?.competencyIds.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
+              {classification.data?.projectIds.length === 0 && <p className="text-sm text-muted-foreground">No Projects linked.</p>}
             </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Job Types (direct + inherited)</p>
-            <JobTypeBadges relevant={relevantJobTypes.data?.get(a.id)} jobTypesById={jobTypesById} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Tags</p>
-            <div className="flex flex-wrap gap-1">
-              {(classification.data?.tagIds ?? []).map((tid) => (
-                <Badge key={tid} variant="outline">
-                  {tags.data?.find((t) => t.id === tid)?.name ?? tid}
-                </Badge>
-              ))}
-              {classification.data?.tagIds.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
+
+          <div className="p-3.5 space-y-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Description</p>
+              <p className="text-sm leading-relaxed">{a.description || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Significance &amp; Impact</p>
+              <p className="text-sm leading-relaxed">{a.significance_impact || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Feedback</p>
+              <p className="text-sm leading-relaxed">{a.feedback || "—"}</p>
             </div>
           </div>
-        </CardContent>
+
+          <div className="p-3.5 space-y-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Competencies</p>
+              <div className="flex flex-wrap gap-1">
+                {(classification.data?.competencyIds ?? []).map((cid) => (
+                  <Badge key={cid} variant="secondary">
+                    {competencies.data?.find((c) => c.id === cid)?.name ?? cid}
+                  </Badge>
+                ))}
+                {classification.data?.competencyIds.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Job Types (direct + inherited)</p>
+              <JobTypeBadges relevant={relevantJobTypes.data?.get(a.id)} jobTypesById={jobTypesById} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Tags</p>
+              <div className="flex flex-wrap gap-1">
+                {(classification.data?.tagIds ?? []).map((tid) => (
+                  <Badge key={tid} variant="outline">
+                    {tags.data?.find((t) => t.id === tid)?.name ?? tid}
+                  </Badge>
+                ))}
+                {classification.data?.tagIds.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
+              </div>
+            </div>
+          </div>
+        </div>
       </Card>
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Master Wordings</h2>
+          <h2 className="text-base font-semibold text-foreground">Master Wordings</h2>
           <AddMasterWordingTrigger open={addWordingOpen} onOpenChange={setAddWordingOpen} />
         </div>
         {addWordingOpen && (
@@ -171,7 +166,7 @@ export function AchievementDetailPage() {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-3">Application Wordings</h2>
+        <h2 className="text-base font-semibold text-foreground mb-3">Application Wordings</h2>
         <div className="space-y-3">
           {(applicationWordings.data ?? []).map((w) => (
             <ApplicationWordingCard key={w.id} wording={w} />
@@ -180,23 +175,25 @@ export function AchievementDetailPage() {
         </div>
       </div>
 
-      <CompoundRelationshipsCard achievementId={a.id} />
+      <div className="grid gap-5 md:grid-cols-2">
+        <CompoundRelationshipsCard achievementId={a.id} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage in Workspaces</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {(workspaceUsage.data ?? []).map((u) => (
-              <Link key={u.id} to={`/workspaces/${u.workspace_id}`}>
-                <Badge variant="secondary">{u.cv_workspaces?.name}</Badge>
-              </Link>
-            ))}
-            {workspaceUsage.data?.length === 0 && <span className="text-sm text-muted-foreground">Not used in any Workspace yet.</span>}
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Usage in Workspaces</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {(workspaceUsage.data ?? []).map((u) => (
+                <Link key={u.id} to={`/workspaces/${u.workspace_id}`}>
+                  <Badge variant="secondary">{u.cv_workspaces?.name}</Badge>
+                </Link>
+              ))}
+              {workspaceUsage.data?.length === 0 && <span className="text-sm text-muted-foreground">Not used in any Workspace yet.</span>}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
