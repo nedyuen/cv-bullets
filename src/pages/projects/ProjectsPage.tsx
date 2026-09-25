@@ -34,7 +34,6 @@ function ProjectAchievementsList({ projectId, includeArchived }: { projectId: st
               {a.mandatory && <MandatoryBadge mandatory={a.mandatory} />}
               {a.status === "archived" && <StatusBadge status={a.status} />}
             </div>
-            {a.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.description}</p>}
           </div>
         </Link>
       ))}

@@ -194,6 +194,8 @@ Relationships:
 
 A Career Role is historical career context, not a target Job Type.
 
+All Career Role fields (including Company) are editable after creation.
+
 ## 9. Project
 
 A Project represents work undertaken within a Career Role.
@@ -216,6 +218,8 @@ Relationships:
 - can have many Achievements;
 - an Achievement can belong to multiple Projects.
 
+All Project fields (including Career Role) are editable after creation.
+
 ## 10. Achievement
 
 Achievement is the central content entity. It represents an accomplishment independently of the words used to describe it.
@@ -227,6 +231,7 @@ Fields:
 - Description
 - Significance & Impact
 - Feedback
+- Notes
 - Mandatory / Optional
 - Status
 - Created At
@@ -238,7 +243,9 @@ Description is a factual explanation of the achievement.
 
 Significance & Impact explains why the achievement is impressive or significant. It can capture scale, complexity, business impact, financial impact, organisational importance, seniority, novelty, differentiation, team size, strategic importance and measurable outcomes.
 
-Feedback contains evidence such as stakeholder feedback, manager comments, praise, interview notes, quotations or other supporting evidence.
+Feedback captures feedback from others (e.g. mentors, interview panels, stakeholders) on how to present or frame this specific achievement. It is not general career feedback or a catch-all notes field.
+
+Notes is free-text for the user's own reference: anything else worth remembering about the achievement, with no fixed format. It is kept separate from Feedback.
 
 Mandatory / Optional distinguishes essential achievements from content that can be dropped when space is constrained.
 
@@ -320,6 +327,10 @@ Master Wording Job Type = AI Transformation.
 Therefore the Achievement is relevant to AI Transformation.
 
 Direct Achievement Job Type tags remain allowed when an Achievement is relevant to a Job Type but there is not yet an appropriate Master Wording.
+
+Only active (non-archived) Master Wordings contribute inherited Job Types.
+
+The union is implemented once, in the database view `achievement_relevant_job_types` (with a `source` column of `direct` or `inherited`). Every screen must read this view rather than re-deriving the union client-side.
 
 ## 16. Content Gaps
 
@@ -483,6 +494,11 @@ Circular references are prohibited. The system must prevent:
 
 - self-reference;
 - indirect cycles such as A → B → C → A.
+
+Enforcement:
+
+- self-reference is rejected in the database by a CHECK constraint on `compound_achievement_components`;
+- indirect cycles are checked in the application before insert (`src/lib/compoundCycles.ts`) by walking the component graph, which is small enough to traverse directly. No database-level graph constraint is used.
 
 ## 26. Job Application
 
@@ -712,6 +728,7 @@ Search across:
 - Description
 - Significance & Impact
 - Feedback
+- Notes
 - Master Wording text
 - Application Wording text
 - Tags
@@ -742,7 +759,7 @@ Show:
 
 1. Header: Subject, ID, status, Edit, Archive.
 2. Career Context: Company, Career Role, Projects.
-3. Achievement information.
+3. Achievement information: Description, Significance & Impact, Feedback, Notes.
 4. Classification: Competencies, direct Job Types, inherited Job Types, Tags.
 5. Master Wordings with versions.
 6. Application Wordings with Application, Company, Job Title, Date Applied, exact wording and source Master Wording/version.
@@ -780,6 +797,9 @@ List:
 - Career Role
 - Company
 - Achievement count
+- Edit and Archive/Restore controls
+
+Each Project row is expandable inline to list its linked Achievements. Each item shows only the Achievement Subject plus Mandatory and Archived badges (no Description), and links to the Achievement detail page. The Include Archived toggle applies to both the Projects and their listed Achievements.
 
 Detail:
 
@@ -796,6 +816,8 @@ Show:
 Company → Career Role → Projects → Achievements
 
 This provides historical context for Achievements.
+
+Career Roles and Projects can be created and edited from here.
 
 ## 46. Settings
 
@@ -872,6 +894,7 @@ achievements:
 - description
 - significance_impact
 - feedback
+- notes (added in migration 0003)
 - mandatory
 - status
 - created_at
@@ -895,7 +918,7 @@ achievement_job_types:
 - achievement_id
 - job_type_id
 
-Inherited Job Types are derived from Master Wording relationships rather than duplicated here.
+Inherited Job Types are derived from Master Wording relationships rather than duplicated here. See the `achievement_relevant_job_types` view (§15).
 
 competencies:
 
@@ -1005,6 +1028,8 @@ compound_achievement_components:
 - compound_achievement_id
 - component_achievement_id
 - display_order
+
+Self-reference is blocked by a CHECK constraint; indirect cycles are checked in the application (§25).
 
 ## 50. Workspace Snapshot Data Model
 
