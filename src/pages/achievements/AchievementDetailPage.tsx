@@ -114,6 +114,10 @@ export function AchievementDetailPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Feedback</p>
               <p className="text-sm leading-relaxed">{a.feedback || "—"}</p>
             </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Notes</p>
+              <p className="text-sm leading-relaxed">{a.notes || "—"}</p>
+            </div>
           </div>
 
           <div className="p-3.5 space-y-3">

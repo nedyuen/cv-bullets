@@ -97,7 +97,7 @@ async function idsForSearchTerm(term: string): Promise<Set<string>> {
 
   const [ownFields, tags, competencies, projects, careerRoles, companies, masterWordingVersions, applicationWordingVersions] =
     await Promise.all([
-      supabase.from("achievements").select("id").or(`subject.ilike.${like},description.ilike.${like},significance_impact.ilike.${like},feedback.ilike.${like}`),
+      supabase.from("achievements").select("id").or(`subject.ilike.${like},description.ilike.${like},significance_impact.ilike.${like},feedback.ilike.${like},notes.ilike.${like}`),
       supabase.from("tags").select("id").ilike("name", like),
       supabase.from("competencies").select("id").ilike("name", like),
       supabase.from("projects").select("id").ilike("name", like),
@@ -268,6 +268,7 @@ export interface AchievementInput {
   description?: string | null;
   significance_impact?: string | null;
   feedback?: string | null;
+  notes?: string | null;
   mandatory: boolean;
   competencyIds: string[];
   jobTypeIds: string[];

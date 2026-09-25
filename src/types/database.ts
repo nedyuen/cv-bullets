@@ -41,6 +41,7 @@ export interface Achievement {
   description: string | null;
   significance_impact: string | null;
   feedback: string | null;
+  notes: string | null;
   mandatory: boolean;
   status: Status;
   created_at: string;

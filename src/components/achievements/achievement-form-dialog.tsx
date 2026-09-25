@@ -36,6 +36,7 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
   const [description, setDescription] = useState("");
   const [significance, setSignificance] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [notes, setNotes] = useState("");
   const [mandatory, setMandatory] = useState(false);
   const [competencyIds, setCompetencyIds] = useState<string[]>([]);
   const [jobTypeIds, setJobTypeIds] = useState<string[]>([]);
@@ -62,12 +63,14 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
       setDescription(achievement.description ?? "");
       setSignificance(achievement.significance_impact ?? "");
       setFeedback(achievement.feedback ?? "");
+      setNotes(achievement.notes ?? "");
       setMandatory(achievement.mandatory);
     } else {
       setSubject("");
       setDescription("");
       setSignificance("");
       setFeedback("");
+      setNotes("");
       setMandatory(false);
       setCompetencyIds([]);
       setJobTypeIds([]);
@@ -95,6 +98,7 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
       description: description.trim() || null,
       significance_impact: significance.trim() || null,
       feedback: feedback.trim() || null,
+      notes: notes.trim() || null,
       mandatory,
       competencyIds,
       jobTypeIds,
@@ -159,7 +163,23 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="achievement-feedback">Feedback</Label>
-                <Textarea id="achievement-feedback" value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={2} placeholder="Stakeholder feedback, praise, interview notes..." />
+                <Textarea
+                  id="achievement-feedback"
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  rows={2}
+                  placeholder="Feedback from others on how to present or frame this achievement (e.g. from mentors, panels, stakeholders) — not general career feedback."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="achievement-notes">Notes</Label>
+                <Textarea
+                  id="achievement-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Anything else worth remembering, for your own reference — no fixed format."
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox id="mandatory" checked={mandatory} onCheckedChange={(v) => setMandatory(v === true)} />
