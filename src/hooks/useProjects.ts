@@ -75,7 +75,9 @@ export function useProjectAchievementCounts() {
   return useQuery({
     queryKey: ["projects", "achievementCounts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("achievement_projects").select("project_id");
+      // achievement_relevant_projects, not achievement_projects directly, so
+      // Compound Achievements (inherited Projects) are counted too.
+      const { data, error } = await supabase.from("achievement_relevant_projects").select("project_id");
       if (error) throw error;
       const counts = new Map<string, number>();
       for (const row of data ?? []) {

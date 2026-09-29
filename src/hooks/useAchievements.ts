@@ -25,7 +25,10 @@ function intersect(sets: Array<Set<string> | null>): Set<string> | null {
 }
 
 async function idsForProject(projectId: string): Promise<Set<string>> {
-  const { data, error } = await supabase.from("achievement_projects").select("achievement_id").eq("project_id", projectId);
+  // Reads the achievement_relevant_projects view, not achievement_projects
+  // directly — Compound Achievements' Projects are inherited from their
+  // components, not manually assigned (see migration 0004).
+  const { data, error } = await supabase.from("achievement_relevant_projects").select("achievement_id").eq("project_id", projectId);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
@@ -39,7 +42,7 @@ async function idsForCareerRole(careerRoleId: string): Promise<Set<string>> {
   const projectIds = (projects ?? []).map((p) => p.id);
   if (projectIds.length === 0) return new Set();
   const { data, error } = await supabase
-    .from("achievement_projects")
+    .from("achievement_relevant_projects")
     .select("achievement_id")
     .in("project_id", projectIds);
   if (error) throw error;
@@ -56,7 +59,7 @@ async function idsForCompany(companyId: string): Promise<Set<string>> {
   const projectIds = (projects ?? []).map((p) => p.id);
   if (projectIds.length === 0) return new Set();
   const { data, error } = await supabase
-    .from("achievement_projects")
+    .from("achievement_relevant_projects")
     .select("achievement_id")
     .in("project_id", projectIds);
   if (error) throw error;
@@ -136,7 +139,7 @@ async function idsForSearchTerm(term: string): Promise<Set<string>> {
     }
   }
   if (directProjectIds.size) {
-    const { data } = await supabase.from("achievement_projects").select("achievement_id").in("project_id", [...directProjectIds]);
+    const { data } = await supabase.from("achievement_relevant_projects").select("achievement_id").in("project_id", [...directProjectIds]);
     for (const r of data ?? []) ids.add(r.achievement_id);
   }
 
@@ -247,7 +250,11 @@ export function useAchievementClassification(id: string | undefined) {
         supabase.from("achievement_competencies").select("competency_id").eq("achievement_id", id!),
         supabase.from("achievement_job_types").select("job_type_id").eq("achievement_id", id!),
         supabase.from("achievement_tags").select("tag_id").eq("achievement_id", id!),
-        supabase.from("achievement_projects").select("project_id").eq("achievement_id", id!),
+        // achievement_relevant_projects, not achievement_projects directly —
+        // Compound Achievements' Projects are inherited from their
+        // components (migration 0004), so this always reflects the correct
+        // resolved set regardless of whether this Achievement is a compound.
+        supabase.from("achievement_relevant_projects").select("project_id").eq("achievement_id", id!),
       ]);
       if (comps.error) throw comps.error;
       if (jts.error) throw jts.error;
@@ -344,6 +351,23 @@ export function useSetAchievementStatus() {
       const { data, error } = await supabase.from("achievements").update({ status }).eq("id", id).select().single();
       if (error) throw error;
       return data as Achievement;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["achievements"] }),
+  });
+}
+
+// Permanent deletion (not archive). Cascades to Master Wordings/versions and
+// classification join rows at the DB level; the DB itself RESTRICTs deletion
+// if any Application Wording or Workspace still references this Achievement.
+// Callers should pre-check usage (see delete-achievement-dialog.tsx) so this
+// is only invoked when deletion is actually safe — the DB constraint is a
+// backstop, not the primary UX.
+export function useDeleteAchievement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("achievements").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["achievements"] }),
   });

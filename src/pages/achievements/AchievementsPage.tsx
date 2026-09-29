@@ -5,6 +5,7 @@ import { PageHeader, EmptyState } from "@/components/common/page-header";
 import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
 import { JobTypeBadges } from "@/components/achievements/job-type-badges";
 import { AchievementFormDialog } from "@/components/achievements/achievement-form-dialog";
+import { DeleteAchievementDialog } from "@/components/achievements/delete-achievement-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,6 +251,7 @@ export function AchievementsPage() {
                       <Link to={`/achievements/${a.id}`}>Open</Link>
                     </Button>
                     <AchievementFormDialog achievement={a} trigger={<Button variant="outline" size="sm">Edit</Button>} />
+                    <DeleteAchievementDialog achievementId={a.id} subject={a.subject} />
                   </div>
                 </div>
 

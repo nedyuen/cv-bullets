@@ -17,8 +17,10 @@ import {
   type AchievementInput,
 } from "@/hooks/useAchievements";
 import { useMasterWordingsForAchievement } from "@/hooks/useMasterWordings";
+import { useCompoundComponents } from "@/hooks/useCompoundAchievements";
 import { AddMasterWordingForm, AddMasterWordingTrigger } from "@/components/achievements/add-master-wording-form";
 import { MasterWordingCard } from "@/components/achievements/master-wording-card";
+import { Badge } from "@/components/ui/badge";
 import type { Achievement } from "@/types/database";
 import { Plus, Pencil } from "lucide-react";
 
@@ -51,6 +53,11 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
   const createTag = useCreateTag();
   const classification = useAchievementClassification(isEdit ? achievement!.id : undefined);
   const masterWordings = useMasterWordingsForAchievement(isEdit ? achievement!.id : undefined, true);
+  const components = useCompoundComponents(isEdit ? achievement!.id : undefined);
+  // A Compound Achievement's Projects are inherited from its components
+  // (migration 0004) rather than manually selected, so they can never drift
+  // out of sync — see achievement_relevant_projects.
+  const isCompound = (components.data?.length ?? 0) > 0;
 
   const createAchievement = useCreateAchievement();
   const updateAchievement = useUpdateAchievement();
@@ -103,7 +110,9 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
       competencyIds,
       jobTypeIds,
       tagIds,
-      projectIds,
+      // Compound Achievements never store direct Project rows — their
+      // Projects are always computed from their components (see isCompound).
+      projectIds: isCompound ? [] : projectIds,
     };
 
     const onSuccess = () => {
@@ -224,12 +233,34 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
                 </div>
                 <div className="space-y-1.5">
                   <Label>Projects</Label>
-                  <MultiSelect
-                    options={(projects.data ?? []).map((p) => ({ value: p.id, label: `${p.name} (${p.career_roles?.title ?? ""})` }))}
-                    selected={projectIds}
-                    onChange={setProjectIds}
-                    placeholder="Select Projects"
-                  />
+                  {isCompound ? (
+                    <div className="rounded-md border border-input bg-muted/40 px-3 py-2 space-y-1.5">
+                      <div className="flex flex-wrap gap-1">
+                        {classification.data?.projectIds.length ? (
+                          classification.data.projectIds.map((pid) => {
+                            const p = projects.data?.find((proj) => proj.id === pid);
+                            return (
+                              <Badge key={pid} variant="secondary">
+                                {p?.name ?? pid}
+                              </Badge>
+                            );
+                          })
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            No Projects — none of its components are linked to a Project yet.
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Inherited from this Compound Achievement's components — not directly editable.</p>
+                    </div>
+                  ) : (
+                    <MultiSelect
+                      options={(projects.data ?? []).map((p) => ({ value: p.id, label: `${p.name} (${p.career_roles?.title ?? ""})` }))}
+                      selected={projectIds}
+                      onChange={setProjectIds}
+                      placeholder="Select Projects"
+                    />
+                  )}
                 </div>
               </div>
             </div>
