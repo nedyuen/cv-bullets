@@ -380,6 +380,8 @@ When wording changes:
 
 Historical versions are immutable.
 
+Changing only a Master Wording's Job Type associations, with the wording text itself unchanged, does not create a new version. Versioning is triggered by text changes only.
+
 Example:
 
 v1: Led AI transformation across 12 business units...
@@ -477,12 +479,19 @@ The Compound Achievement gets its own:
 - Competencies
 - Job Type relevance
 - Tags
-- Projects
 - Master Wordings
 - Application Wordings
 - history
 
 The component Achievements remain unchanged.
+
+### Compound Achievement Projects are inherited, not manually set
+
+Projects are a deliberate exception to the list above. Rather than being independently selected, a Compound Achievement's Projects are computed automatically as the union of its components' Projects — recursively, so nested compounds resolve through every descendant down to the leaf Achievements (see §25). This mirrors the Job Type inheritance philosophy in §15: a single computed source of truth that cannot drift out of sync with what its components actually are.
+
+The union is implemented once, in the database view `achievement_relevant_projects` (§49). Every screen must read this view rather than re-deriving the union client-side, exactly as with `achievement_relevant_job_types`.
+
+Manual Project selection is disabled in the UI for any Achievement that has components (i.e. is a Compound Achievement); it remains a normal multi-select for non-compound Achievements.
 
 ## 25. Nested Compound Achievements
 
@@ -720,6 +729,8 @@ Led cross-functional programme to...
 
 Do not create a separate top-level library row for every wording.
 
+Each row exposes Open (navigate to the Achievement Detail Page), Edit and Delete controls. Edit opens a single dialog with tabs for the Achievement's own fields and for its Master Wordings, so both can be managed without leaving the dialog — see §17 onward for what the Master Wordings tab manages. Delete is covered by §47a; it is a distinct, permanent action from Archive.
+
 ## 41. Achievement Search
 
 Search across:
@@ -843,6 +854,18 @@ Use soft archiving for:
 
 Archived records are normally excluded from active views. Provide Include Archived for retrieval. Historical relationships remain intact.
 
+## 47a. Achievement Deletion
+
+Achievements are the one entity that also supports genuine, permanent deletion, as a deliberate addition alongside archiving (§47), for cases where the user wants an Achievement actually removed rather than retained-but-hidden.
+
+Deleting an Achievement:
+
+- also deletes its Master Wordings (and their versions);
+- is blocked (no delete option offered) if the Achievement is used in any Application Wording, used in any CV Workspace, or is a component of a Compound Achievement — in each case the user must remove that usage first;
+- otherwise shows a warning summarising what will be deleted (e.g. Master Wording count) before the user confirms.
+
+This is a narrow, explicit exception to the soft-archive default in §47 — it exists because Master Wordings, Application Wordings and Compound Achievement components are exactly the kind of provenance the system otherwise protects, so deletion must never silently orphan or corrupt them.
+
 ## 48. IDs
 
 Every core entity has a stable unique ID.
@@ -904,6 +927,8 @@ achievement_projects:
 
 - achievement_id
 - project_id
+
+For a Compound Achievement, effective Projects are not read from this table directly, and no direct rows are written for it — the Compound Achievement's rows here are always kept empty, and its Projects are derived from its components' rows via the `achievement_relevant_projects` view (see below, and §24).
 
 job_types:
 
@@ -1030,6 +1055,8 @@ compound_achievement_components:
 - display_order
 
 Self-reference is blocked by a CHECK constraint; indirect cycles are checked in the application (§25).
+
+`achievement_relevant_projects` (view, same `achievement_id`/`project_id` shape as `achievement_projects`, a drop-in replacement for reads): for a non-compound Achievement, its own direct rows from `achievement_projects`; for a Compound Achievement, the union of every recursively-resolved component's direct Projects. Built with a recursive CTE over `compound_achievement_components` so nested compounds resolve correctly. See §24.
 
 ## 50. Workspace Snapshot Data Model
 
@@ -1364,3 +1391,13 @@ Career Role → Project → Achievement → Master Wording/version → Workspace
 while allowing flexible many-to-many relationships wherever professional reality requires them.
 
 The result should be a durable personal content system that becomes more valuable over time as more Achievements, wordings and applications are captured.
+
+## 65. Keeping This Specification Current
+
+This document is the persistent source of truth for the product and is checked into the repository. It is read at the start of every working session, so it must reflect the product as it actually is, not just as it was originally envisioned.
+
+Whenever a change is made to the product's data model, business rules, workflows, or user-facing behaviour, update the relevant section(s) of this document as part of that same change — before considering the work finished. This applies whether the change originates from an explicit spec revision or from an ordinary feature/bug-fix request that alters behaviour described here (e.g. a new field, a new deletion or archiving rule, a change to what is manually set vs. derived, a new UI control). Purely internal implementation details (refactors, library choices, file layout) do not need to be reflected here unless they change a rule or behaviour this document describes.
+
+When a change deliberately overrides or narrows something this document currently says (as with Compound Achievement Projects in §24, which narrows the general "gets its own Projects" rule), update the text in place rather than leaving the contradiction for a future reader to puzzle over.
+
+If it is unclear whether a change is significant enough to warrant a spec update, prefer updating it — a stale spec is more costly than a slightly over-documented one.
