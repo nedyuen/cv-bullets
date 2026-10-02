@@ -71,6 +71,30 @@ export function useUpdateProject() {
   });
 }
 
+// Batched achievement -> relevant Project ids (reads achievement_relevant_projects,
+// so Compound Achievements' inherited Projects resolve correctly too — see
+// migration 0004). Pattern mirrors useRelevantJobTypesMap.
+export function useAchievementProjectsMap(achievementIds: string[]) {
+  return useQuery({
+    queryKey: ["projects", "byAchievements", [...achievementIds].sort()],
+    enabled: achievementIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("achievement_relevant_projects")
+        .select("achievement_id, project_id")
+        .in("achievement_id", achievementIds);
+      if (error) throw error;
+      const map = new Map<string, string[]>();
+      for (const row of data ?? []) {
+        const arr = map.get(row.achievement_id) ?? [];
+        arr.push(row.project_id);
+        map.set(row.achievement_id, arr);
+      }
+      return map;
+    },
+  });
+}
+
 export function useProjectAchievementCounts() {
   return useQuery({
     queryKey: ["projects", "achievementCounts"],

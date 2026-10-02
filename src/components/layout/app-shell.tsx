@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Layers, BookOpen, Briefcase, FolderKanban, Building2, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, Layers, BookOpen, Target, Briefcase, FolderKanban, Building2, Settings, Menu, X } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/workspaces", label: "CV Workspaces", icon: Layers },
   { to: "/achievements", label: "Achievements", icon: BookOpen },
+  { to: "/master-views", label: "Master Views", icon: Target },
   { to: "/applications", label: "Applications", icon: Briefcase },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/career", label: "Career", icon: Building2 },

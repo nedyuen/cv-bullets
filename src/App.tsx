@@ -6,6 +6,7 @@ import { WorkspacesPage } from "@/pages/workspaces/WorkspacesPage";
 import { WorkspaceDetailPage } from "@/pages/workspaces/WorkspaceDetailPage";
 import { AchievementsPage } from "@/pages/achievements/AchievementsPage";
 import { AchievementDetailPage } from "@/pages/achievements/AchievementDetailPage";
+import { MasterViewsPage } from "@/pages/achievements/MasterViewsPage";
 import { ApplicationsPage } from "@/pages/applications/ApplicationsPage";
 import { ApplicationDetailPage } from "@/pages/applications/ApplicationDetailPage";
 import { ProjectsPage } from "@/pages/projects/ProjectsPage";
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/achievements/:id" element={<AchievementDetailPage />} />
+          <Route path="/master-views" element={<MasterViewsPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
           <Route path="/applications/:id" element={<ApplicationDetailPage />} />
           <Route path="/projects" element={<ProjectsPage />} />

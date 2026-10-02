@@ -731,6 +731,15 @@ Do not create a separate top-level library row for every wording.
 
 Each row exposes Open (navigate to the Achievement Detail Page), Edit and Delete controls. Edit opens a single dialog with tabs for the Achievement's own fields and for its Master Wordings, so both can be managed without leaving the dialog — see §17 onward for what the Master Wordings tab manages. Delete is covered by §47a; it is a distinct, permanent action from Archive.
 
+### Master Views
+
+A dedicated page ("Master Views") lets the user pick a Job Type and see every Achievement relevant to it (direct ∪ inherited, per §15), with the wording that specifically applies:
+
+- If a Master Wording of the Achievement is tagged to the selected Job Type, show its latest version text (if more than one Master Wording is tagged to the same Job Type, show each).
+- Otherwise — the Achievement is relevant only via a direct tag, or via a Master Wording tagged to a different Job Type — show the Achievement's Subject instead, clearly marked as a fallback. This is the Content Gap case (§16) surfaced inline rather than as a separate report.
+
+Achievements are grouped by Company > Career Role, derived from each Achievement's Projects (via `achievement_relevant_projects`, so a Compound Achievement's inherited Projects are reflected too — §24). An Achievement whose Projects span more than one Career Role appears once under each, consistent with the many-to-many relationships described in §6 rather than forcing a single owner. An Achievement with no resolvable Project is grouped under Unassigned.
+
 ## 41. Achievement Search
 
 Search across:
@@ -1102,6 +1111,7 @@ Primary navigation:
 
 - CV Workspaces
 - Achievements
+- Master Views (§40 — browse Achievements and their relevant wording for one target Job Type at a time, grouped by Company and Career Role)
 - Applications
 - Projects
 - Career
