@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Archive, RotateCcw, Pencil } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
-import { StatusBadge } from "@/components/common/status-badge";
+import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
 import { CompanyFormDialog } from "@/components/career/company-form-dialog";
 import { CareerRoleFormDialog } from "@/components/career/career-role-form-dialog";
 import { ProjectFormDialog } from "@/components/career/project-form-dialog";
@@ -12,8 +12,39 @@ import { Label } from "@/components/ui/label";
 import { useCompanies, useUpdateCompany } from "@/hooks/useCompanies";
 import { useCareerRoles, useUpdateCareerRole, type CareerRoleWithCompany } from "@/hooks/useCareerRoles";
 import { useProjects, useProjectAchievementCounts, useUpdateProject } from "@/hooks/useProjects";
+import { useAchievements } from "@/hooks/useAchievements";
 import type { Status } from "@/types/database";
 import { Link } from "react-router-dom";
+
+function ProjectAchievementsList({ projectId, includeArchived }: { projectId: string; includeArchived: boolean }) {
+  const achievements = useAchievements({ projectId, includeArchived });
+
+  if (achievements.isLoading) {
+    return <p className="text-sm text-muted-foreground px-2 py-1.5">Loading…</p>;
+  }
+  if ((achievements.data ?? []).length === 0) {
+    return <p className="text-sm text-muted-foreground px-2 py-1.5">No Achievements linked yet.</p>;
+  }
+  return (
+    <div className="space-y-1">
+      {achievements.data!.map((a) => (
+        <Link
+          key={a.id}
+          to={`/achievements/${a.id}`}
+          className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-foreground">{a.subject}</span>
+              {a.mandatory && <MandatoryBadge mandatory={a.mandatory} />}
+              {a.status === "archived" && <StatusBadge status={a.status} />}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 function ArchiveToggleButton({ status, onToggle }: { status: Status; onToggle: () => void }) {
   return (
@@ -84,10 +115,20 @@ function CompanyNode({
 
 function RoleNode({ role, includeArchived }: { role: CareerRoleWithCompany; includeArchived: boolean }) {
   const [open, setOpen] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const projects = useProjects(includeArchived, role.id);
   const counts = useProjectAchievementCounts();
   const updateRole = useUpdateCareerRole();
   const updateProject = useUpdateProject();
+
+  const toggleExpandProject = (id: string) => {
+    setExpandedProjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="rounded-md border pl-4">
@@ -128,18 +169,47 @@ function RoleNode({ role, includeArchived }: { role: CareerRoleWithCompany; incl
       </div>
       {open && (
         <div className="pl-6 pb-2 space-y-1">
-          {(projects.data ?? []).map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
-              <Link to="/projects" className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
-                <span>{p.name}</span>
-                {p.status === "archived" && <StatusBadge status={p.status} />}
-              </Link>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-xs text-muted-foreground">{counts.data?.get(p.id) ?? 0} achievement(s)</span>
-                <ArchiveToggleButton status={p.status} onToggle={() => updateProject.mutate({ id: p.id, status: p.status === "active" ? "archived" : "active" })} />
+          {(projects.data ?? []).map((p) => {
+            const isProjectOpen = expandedProjects.has(p.id);
+            return (
+              <div key={p.id} className="rounded border border-transparent hover:border-border">
+                {/* Sibling of the actions div, not an ancestor — nesting a portaled
+                    Dialog (ProjectFormDialog below) inside this toggle's onClick would
+                    re-fire the toggle on every click inside the dialog (React bubbles
+                    portaled clicks through the component tree, not the DOM tree). */}
+                <div className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="flex flex-1 min-w-0 items-center gap-2 flex-wrap cursor-pointer"
+                    onClick={() => toggleExpandProject(p.id)}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggleExpandProject(p.id)}
+                  >
+                    {isProjectOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                    <span>{p.name}</span>
+                    {p.status === "archived" && <StatusBadge status={p.status} />}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-xs text-muted-foreground">{counts.data?.get(p.id) ?? 0} achievement(s)</span>
+                    <ProjectFormDialog
+                      project={p}
+                      trigger={
+                        <Button size="sm" variant="ghost" aria-label="Edit Project">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      }
+                    />
+                    <ArchiveToggleButton status={p.status} onToggle={() => updateProject.mutate({ id: p.id, status: p.status === "active" ? "archived" : "active" })} />
+                  </div>
+                </div>
+                {isProjectOpen && (
+                  <div className="pl-5 pb-1">
+                    <ProjectAchievementsList projectId={p.id} includeArchived={includeArchived} />
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           {projects.data?.length === 0 && <p className="text-sm text-muted-foreground px-2">No Projects yet.</p>}
         </div>
       )}
@@ -155,7 +225,7 @@ export function CareerPage() {
     <div>
       <PageHeader
         title="Career"
-        description="Company → Career Role → Project — historical context for Achievements."
+        description="Company → Career Role → Project → Achievement — historical context for your work."
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">

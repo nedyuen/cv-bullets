@@ -9,7 +9,6 @@ import { AchievementDetailPage } from "@/pages/achievements/AchievementDetailPag
 import { MasterViewsPage } from "@/pages/achievements/MasterViewsPage";
 import { ApplicationsPage } from "@/pages/applications/ApplicationsPage";
 import { ApplicationDetailPage } from "@/pages/applications/ApplicationDetailPage";
-import { ProjectsPage } from "@/pages/projects/ProjectsPage";
 import { CareerPage } from "@/pages/career/CareerPage";
 import { SettingsPage } from "@/pages/settings/SettingsPage";
 
@@ -26,7 +25,6 @@ export default function App() {
           <Route path="/master-views" element={<MasterViewsPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
           <Route path="/applications/:id" element={<ApplicationDetailPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/career" element={<CareerPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

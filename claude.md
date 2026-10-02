@@ -819,33 +819,24 @@ Optionally show similar applications by Job Type for inspiration. This is retrie
 
 ## 44. Projects
 
-List:
-
-- Project
-- Career Role
-- Company
-- Achievement count
-- Edit and Archive/Restore controls
-
-Each Project row is expandable inline to list its linked Achievements. Each item shows only the Achievement Subject plus Mandatory and Archived badges (no Description), and links to the Achievement detail page. The Include Archived toggle applies to both the Projects and their listed Achievements.
-
-Detail:
-
-- Project Name
-- Description
-- Career Role
-- Company
-- linked Achievements
+There is no standalone Projects page. Before this change, the Career page showed Company → Career Role → Project, and a separate Projects page also showed every Project with its linked Achievements — the same information reached two duplicate ways. Projects are now shown and managed entirely inline within the Career page (§45), nested under their Career Role. Project records themselves, their fields, and their Edit/Archive controls are unchanged — only the standalone page and its route/nav entry are gone.
 
 ## 45. Career
 
 Show:
 
-Company → Career Role → Projects → Achievements
+Company → Career Role → Project → Achievement
 
-This provides historical context for Achievements.
+This provides historical context for Achievements, and is the single place Projects are browsed and managed (see §44).
 
-Career Roles and Projects can be created and edited from here.
+Company, Career Role and Project can all be created and edited from here.
+
+List, per level:
+
+- Career Role rows: title, dates, Edit and Archive/Restore controls.
+- Project rows (nested under their Career Role): Project name, Archived badge, linked Achievement count, Edit and Archive/Restore controls.
+
+Each Project row is expandable inline to list its linked Achievements, the same way Company and Career Role rows expand to show what's nested under them. Each listed Achievement shows only its Subject plus Mandatory and Archived badges (no Description), and links to the Achievement detail page. The single Include Archived toggle on this page applies throughout: Companies, Career Roles, Projects, and their listed Achievements.
 
 ## 46. Settings
 
@@ -1123,7 +1114,6 @@ Primary navigation:
 - Achievements
 - Master Views (§40 — browse Achievements and their relevant wording for one target Job Type at a time, grouped by Company and Career Role)
 - Applications
-- Projects
 - Career
 - Settings
 
