@@ -36,7 +36,7 @@ export function ApplicationsPage() {
               <CardContent className="flex items-center justify-between py-2.5">
                 <div className="min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">
-                    {app.companies?.name} — {app.job_title}
+                    {app.company_name} — {app.job_title}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {app.job_types?.name ?? "No Job Type"} {app.date_applied && `· Applied ${app.date_applied}`}

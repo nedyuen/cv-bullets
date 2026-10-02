@@ -37,7 +37,7 @@ export function useRecentApplications(limit = 5) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("job_applications")
-        .select("id, job_title, date_applied, status, companies(id, name)")
+        .select("id, job_title, date_applied, status, company_name")
         .order("created_at", { ascending: false })
         .limit(limit);
       if (error) throw error;
@@ -46,7 +46,7 @@ export function useRecentApplications(limit = 5) {
         job_title: string;
         date_applied: string | null;
         status: string;
-        companies: { id: string; name: string } | null;
+        company_name: string;
       }>;
     },
   });

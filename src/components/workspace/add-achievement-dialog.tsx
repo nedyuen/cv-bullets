@@ -208,7 +208,7 @@ export function AddAchievementDialog({ workspaceId, targetJobTypeId, existingAch
                       key={w.id}
                       selected={choice?.kind === "application" && choice.text === w.currentVersion?.text}
                       text={w.currentVersion?.text ?? ""}
-                      badge={w.jobApplication ? `${w.jobApplication.companies?.name} — ${w.jobApplication.job_title}` : undefined}
+                      badge={w.jobApplication ? `${w.jobApplication.company_name} — ${w.jobApplication.job_title}` : undefined}
                       onSelect={() => setChoice({ kind: "application", text: w.currentVersion?.text ?? "" })}
                     />
                   ))}

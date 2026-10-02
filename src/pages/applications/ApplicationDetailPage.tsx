@@ -31,7 +31,7 @@ export function ApplicationDetailPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title={`${app.companies?.name} — ${app.job_title}`}
+        title={`${app.company_name} — ${app.job_title}`}
         description={app.job_posting_url ?? undefined}
         actions={
           <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export function ApplicationDetailPage() {
           <CardContent className="flex flex-col gap-1">
             {similar.map((a) => (
               <Link key={a.id} to={`/applications/${a.id}`} className="text-sm hover:underline">
-                {a.companies?.name} — {a.job_title}
+                {a.company_name} — {a.job_title}
                 {a.date_applied && <span className="text-muted-foreground"> · {a.date_applied}</span>}
               </Link>
             ))}

@@ -5,7 +5,7 @@ import type { ApplicationWording, ApplicationWordingVersion } from "@/types/data
 export interface ApplicationWordingWithDetail extends ApplicationWording {
   currentVersion: ApplicationWordingVersion | null;
   achievementIds: string[];
-  jobApplication: { id: string; job_title: string; date_applied: string | null; companies: { id: string; name: string } | null } | null;
+  jobApplication: { id: string; job_title: string; date_applied: string | null; company_name: string } | null;
 }
 
 async function attachDetail(rows: ApplicationWording[]): Promise<ApplicationWordingWithDetail[]> {
@@ -19,7 +19,7 @@ async function attachDetail(rows: ApplicationWording[]): Promise<ApplicationWord
       ? supabase.from("application_wording_versions").select("*").in("id", versionIds)
       : Promise.resolve({ data: [], error: null }),
     supabase.from("application_wording_achievements").select("application_wording_id, achievement_id").in("application_wording_id", ids),
-    supabase.from("job_applications").select("id, job_title, date_applied, companies(id, name)").in("id", applicationIds),
+    supabase.from("job_applications").select("id, job_title, date_applied, company_name").in("id", applicationIds),
   ]);
   if (versionsRes.error) throw versionsRes.error;
   if (linksRes.error) throw linksRes.error;

@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import { useCompanies, useCreateCompany } from "@/hooks/useCompanies";
 import { useJobTypes } from "@/hooks/useSettings";
 import {
   useCreateJobApplication,
@@ -29,8 +28,6 @@ export function JobApplicationFormDialog({ application, trigger }: { application
   const [targetSalary, setTargetSalary] = useState("");
   const [applicationStage, setApplicationStage] = useState<ApplicationStage>("pending_application");
 
-  const companies = useCompanies();
-  const createCompany = useCreateCompany();
   const jobTypes = useJobTypes();
   const create = useCreateJobApplication();
   const update = useUpdateJobApplication();
@@ -39,7 +36,7 @@ export function JobApplicationFormDialog({ application, trigger }: { application
   useEffect(() => {
     if (!open) return;
     if (isEdit && application) {
-      setCompanyName(application.companies?.name ?? "");
+      setCompanyName(application.company_name);
       setJobTitle(application.job_title);
       setJobTypeId(application.job_type_id ?? NONE);
       setDateApplied(application.date_applied ?? "");
@@ -57,28 +54,17 @@ export function JobApplicationFormDialog({ application, trigger }: { application
     }
   }, [open, isEdit, application]);
 
-  const submit = async () => {
+  const submit = () => {
     const name = companyName.trim();
     if (!name || !jobTitle.trim()) return;
     const onError = (e: Error) => toast({ title: "Couldn't save", description: e.message, variant: "destructive" });
 
-    // Company is a free-text field here (no dropdown) — resolve it to the
-    // existing Company record by name if one exists (so repeat applications
-    // to the same company, or one also used for a Career Role, stay linked
-    // to a single record), otherwise create it. Case-insensitive so "Acme"
-    // and "ACME" don't silently create duplicates.
-    let companyId = (companies.data ?? []).find((c) => c.name.toLowerCase() === name.toLowerCase())?.id;
-    if (!companyId) {
-      try {
-        companyId = (await createCompany.mutateAsync(name)).id;
-      } catch (e) {
-        onError(e as Error);
-        return;
-      }
-    }
-
+    // Company here is just a plain text field on the Job Application itself
+    // — deliberately decoupled from the `companies` table used by Career
+    // Roles, so applying somewhere never pollutes the Career page's list of
+    // actual past employers (spec §26).
     const input = {
-      company_id: companyId,
+      company_name: name,
       job_title: jobTitle.trim(),
       job_type_id: jobTypeId === NONE ? null : jobTypeId,
       date_applied: dateApplied || null,
@@ -165,7 +151,7 @@ export function JobApplicationFormDialog({ application, trigger }: { application
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={create.isPending || update.isPending || createCompany.isPending}>
+          <Button onClick={submit} disabled={create.isPending || update.isPending}>
             {isEdit ? "Save Changes" : "Create"}
           </Button>
         </DialogFooter>

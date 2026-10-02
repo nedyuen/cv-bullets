@@ -117,7 +117,7 @@ export type ApplicationStage = "pending_application" | "applied" | "pending_inte
 
 export interface JobApplication {
   id: string;
-  company_id: string;
+  company_name: string;
   job_title: string;
   job_type_id: string | null;
   date_applied: string | null;

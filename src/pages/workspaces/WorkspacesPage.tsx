@@ -38,7 +38,7 @@ export function WorkspacesPage() {
                   <p className="font-semibold text-sm text-foreground truncate">{w.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {w.job_types?.name ?? "No target Job Type"}
-                    {w.job_applications && ` · Linked to ${w.job_applications.companies?.name} — ${w.job_applications.job_title}`}
+                    {w.job_applications && ` · Linked to ${w.job_applications.company_name} — ${w.job_applications.job_title}`}
                   </p>
                 </div>
                 {w.status === "archived" && <StatusBadge status={w.status} />}

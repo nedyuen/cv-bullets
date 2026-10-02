@@ -11,7 +11,6 @@ export const APPLICATION_STAGES: { value: ApplicationStage; label: string }[] = 
 ];
 
 export interface JobApplicationWithContext extends JobApplication {
-  companies: { id: string; name: string } | null;
   job_types: { id: string; name: string } | null;
 }
 
@@ -21,7 +20,7 @@ export function useJobApplications(includeArchived = false) {
     queryFn: async () => {
       let query = supabase
         .from("job_applications")
-        .select("*, companies(id, name), job_types(id, name)")
+        .select("*, job_types(id, name)")
         .order("date_applied", { ascending: false, nullsFirst: false });
       if (!includeArchived) query = query.eq("status", "active");
       const { data, error } = await query;
@@ -38,7 +37,7 @@ export function useJobApplication(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("job_applications")
-        .select("*, companies(id, name), job_types(id, name)")
+        .select("*, job_types(id, name)")
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -48,7 +47,7 @@ export function useJobApplication(id: string | undefined) {
 }
 
 export interface JobApplicationInput {
-  company_id: string;
+  company_name: string;
   job_title: string;
   job_type_id?: string | null;
   date_applied?: string | null;

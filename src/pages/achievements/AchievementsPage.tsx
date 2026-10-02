@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAchievements, type AchievementFilters } from "@/hooks/useAchievements";
 import { useJobTypes, useCompetencies, useTags } from "@/hooks/useSettings";
-import { useCompanies } from "@/hooks/useCompanies";
+import { useCompaniesWithCareerRoles } from "@/hooks/useCompanies";
 import { useCareerRoles } from "@/hooks/useCareerRoles";
 import { useProjects } from "@/hooks/useProjects";
 import { useRelevantJobTypesMap } from "@/hooks/useRelevantJobTypes";
@@ -51,7 +51,7 @@ export function AchievementsPage() {
 
   const jobTypes = useJobTypes();
   const competencies = useCompetencies();
-  const companies = useCompanies();
+  const companies = useCompaniesWithCareerRoles();
   const careerRoles = useCareerRoles();
   const projects = useProjects();
   const tags = useTags();

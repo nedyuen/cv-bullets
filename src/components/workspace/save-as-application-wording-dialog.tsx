@@ -81,7 +81,7 @@ export function SaveAsApplicationWordingDialog({
               <SelectContent>
                 {(applications.data ?? []).map((a) => (
                   <SelectItem key={a.id} value={a.id}>
-                    {a.companies?.name} — {a.job_title}
+                    {a.company_name} — {a.job_title}
                   </SelectItem>
                 ))}
               </SelectContent>

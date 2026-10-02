@@ -81,7 +81,7 @@ export function WorkspaceDetailPage() {
         {w.job_types?.name && <Badge variant="secondary">Target: {w.job_types.name}</Badge>}
         {w.job_applications && (
           <Badge variant="outline">
-            Linked to {w.job_applications.companies?.name} — {w.job_applications.job_title}
+            Linked to {w.job_applications.company_name} — {w.job_applications.job_title}
           </Badge>
         )}
       </div>

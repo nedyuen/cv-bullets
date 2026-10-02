@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useCompanies, useUpdateCompany } from "@/hooks/useCompanies";
+import { useCompaniesWithCareerRoles, useUpdateCompany } from "@/hooks/useCompanies";
 import { useCareerRoles, useUpdateCareerRole, type CareerRoleWithCompany } from "@/hooks/useCareerRoles";
 import { useProjects, useProjectAchievementCounts, useUpdateProject } from "@/hooks/useProjects";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -219,7 +219,7 @@ function RoleNode({ role, includeArchived }: { role: CareerRoleWithCompany; incl
 
 export function CareerPage() {
   const [includeArchived, setIncludeArchived] = useState(false);
-  const companies = useCompanies(includeArchived);
+  const companies = useCompaniesWithCareerRoles(includeArchived);
 
   return (
     <div>

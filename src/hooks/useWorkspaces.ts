@@ -4,7 +4,7 @@ import type { CvWorkspace, CvWorkspaceAchievement, Status } from "@/types/databa
 
 export interface WorkspaceWithContext extends CvWorkspace {
   job_types: { id: string; name: string } | null;
-  job_applications: { id: string; job_title: string; companies: { id: string; name: string } | null } | null;
+  job_applications: { id: string; job_title: string; company_name: string } | null;
 }
 
 export function useWorkspaces(includeArchived = false) {
@@ -13,7 +13,7 @@ export function useWorkspaces(includeArchived = false) {
     queryFn: async () => {
       let query = supabase
         .from("cv_workspaces")
-        .select("*, job_types(id, name), job_applications(id, job_title, companies(id, name))")
+        .select("*, job_types(id, name), job_applications(id, job_title, company_name)")
         .order("updated_at", { ascending: false });
       if (!includeArchived) query = query.eq("status", "active");
       const { data, error } = await query;
@@ -30,7 +30,7 @@ export function useWorkspace(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cv_workspaces")
-        .select("*, job_types(id, name), job_applications(id, job_title, companies(id, name))")
+        .select("*, job_types(id, name), job_applications(id, job_title, company_name)")
         .eq("id", id!)
         .single();
       if (error) throw error;

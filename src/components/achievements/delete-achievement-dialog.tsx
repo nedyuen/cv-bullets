@@ -38,7 +38,7 @@ export function DeleteAchievementDialog({ achievementId, subject }: { achievemen
   const blockers = [
     ...(applicationWordings.data ?? []).map((w) => ({
       key: `app-${w.id}`,
-      label: w.jobApplication ? `${w.jobApplication.companies?.name ?? "?"} — ${w.jobApplication.job_title}` : "an Application",
+      label: w.jobApplication ? `${w.jobApplication.company_name} — ${w.jobApplication.job_title}` : "an Application",
       to: w.jobApplication ? `/applications/${w.jobApplication.id}` : undefined,
       kind: "Application Wording",
     })),

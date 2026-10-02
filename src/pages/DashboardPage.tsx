@@ -44,7 +44,7 @@ export function DashboardPage() {
           <CardContent className="space-y-2">
             {(recent.data ?? []).map((a) => (
               <Link key={a.id} to={`/applications/${a.id}`} className="block text-sm hover:underline">
-                {a.companies?.name} — {a.job_title}
+                {a.company_name} — {a.job_title}
                 {a.date_applied && <span className="text-muted-foreground"> · {a.date_applied}</span>}
               </Link>
             ))}

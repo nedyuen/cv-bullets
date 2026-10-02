@@ -86,7 +86,7 @@ export function WorkspaceFormDialog() {
                 <SelectItem value={NONE}>None — reusable draft</SelectItem>
                 {(applications.data ?? []).map((a) => (
                   <SelectItem key={a.id} value={a.id}>
-                    {a.companies?.name} — {a.job_title}
+                    {a.company_name} — {a.job_title}
                   </SelectItem>
                 ))}
               </SelectContent>

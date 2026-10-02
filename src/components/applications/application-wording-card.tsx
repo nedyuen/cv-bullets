@@ -46,7 +46,7 @@ export function ApplicationWordingCard({
           <div className="flex-1 space-y-1.5">
             {showApplicationLink && wording.jobApplication && (
               <Link to={`/applications/${wording.jobApplication.id}`} className="text-xs text-primary hover:underline">
-                {wording.jobApplication.companies?.name} — {wording.jobApplication.job_title}
+                {wording.jobApplication.company_name} — {wording.jobApplication.job_title}
                 {wording.jobApplication.date_applied && ` · ${wording.jobApplication.date_applied}`}
               </Link>
             )}

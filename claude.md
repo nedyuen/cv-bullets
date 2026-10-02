@@ -169,7 +169,8 @@ Fields:
 Relationships:
 
 - one Company → many Career Roles
-- one Company → many Job Applications
+
+A Job Application's company is deliberately NOT a relationship to this entity — see §26. This narrows the original model (Company was originally shared between Career Roles and Job Applications) to prevent companies that exist only because of a Job Application from polluting the Career page's list of actual past employers.
 
 ## 8. Career Role
 
@@ -531,7 +532,7 @@ Target Salary is free-text (it may be a figure, a range, or include a currency s
 
 Application Status tracks where the application sits in the pipeline: Pending Application, Applied, Pending Interview, Interviewed, Rejected. This is distinct from Status, which is the standard soft-archive field (§47) shared with every other entity — Application Status tracks progress, Status tracks whether the record itself is archived.
 
-Company is a plain free-text field for a Job Application, not a dropdown — the user is applying to companies, which are not necessarily companies they have a Career Role history with (contrast Career Role's Company, §8, which is always a company actually worked for). On save, the typed name is resolved to an existing Company record by case-insensitive name match if one exists, otherwise a new Company record is created — so the underlying relationship is still the same shared `companies` table and FK as Career Role → Company (§7); only the entry UX differs (no picker, no list of existing companies to choose from).
+Company is a plain free-text field stored directly on the Job Application itself (`company_name`), not a dropdown and not a relationship to the Company entity (§7) used by Career Roles — the user is applying to companies, which are not necessarily companies they have a Career Role history with (contrast Career Role's Company, §8, which is always a company actually worked for). This is a deliberate narrowing of the original spec, which shared one `companies` table between both: sharing it meant a company that existed only because of a Job Application would pollute the Career page's list of actual past employers, so the two are now fully decoupled. If you're later hired somewhere you'd previously applied to, that's handled by simply creating a Career Role for that Company in the normal way (§8) — the two records aren't automatically linked.
 
 Do not add a Job Description field to the MVP. This is not a full ATS.
 
@@ -831,6 +832,8 @@ This provides historical context for Achievements, and is the single place Proje
 
 Company, Career Role and Project can all be created and edited from here.
 
+The Company list here only includes companies that have at least one Career Role — a company that exists only because of a Job Application never appears (§7/§26). The Career Role creation form is the exception: it shows every Company, including ones with zero Career Roles so far, since you may be adding that company's first one.
+
 List, per level:
 
 - Career Role rows: title, dates, Edit and Archive/Restore controls.
@@ -1000,7 +1003,7 @@ master_wording_job_types:
 job_applications:
 
 - id
-- company_id
+- company_name (added in migration 0007, dropped the old `company_id` FK into `companies` in migration 0009 — free text, not null, deliberately not a relationship to the `companies` entity used by Career Roles; see §7/§26)
 - job_title
 - job_type_id
 - date_applied

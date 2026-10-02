@@ -15,6 +15,22 @@ export function useCompanies(includeArchived = false) {
   });
 }
 
+export function useCompaniesWithCareerRoles(includeArchived = false) {
+  return useQuery({
+    queryKey: ["companies", "withCareerRoles", includeArchived],
+    queryFn: async () => {
+      // !inner restricts to companies with >=1 career_roles row — i.e. real
+      // employers — so a company that exists only because of a Job
+      // Application never surfaces in Career-context UI (spec §7/§45).
+      let query = supabase.from("companies").select("*, career_roles!inner(id)").order("name");
+      if (!includeArchived) query = query.eq("status", "active");
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Company[];
+    },
+  });
+}
+
 export function useCompany(id: string | undefined) {
   return useQuery({
     queryKey: ["companies", "detail", id],
