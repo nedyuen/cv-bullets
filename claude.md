@@ -1411,3 +1411,11 @@ Whenever a change is made to the product's data model, business rules, workflows
 When a change deliberately overrides or narrows something this document currently says (as with Compound Achievement Projects in §24, which narrows the general "gets its own Projects" rule), update the text in place rather than leaving the contradiction for a future reader to puzzle over.
 
 If it is unclear whether a change is significant enough to warrant a spec update, prefer updating it — a stale spec is more costly than a slightly over-documented one.
+
+## 66. Authentication & Access Control
+
+This is a single-user tool. Authentication is Supabase Auth, email/password only — no public sign-up form exists or ever should; the one account is created directly in the Supabase Dashboard by the owner, never through the app.
+
+Row Level Security is enabled on every table, with one shared-access policy per table (`auth.role() = 'authenticated'`, all operations) — not per-row ownership, since there is only ever one account. `achievement_relevant_job_types` and `achievement_relevant_projects` use `security_invoker = true` so they respect RLS rather than bypassing it via the view owner's privileges.
+
+Password reset is out of scope for MVP.

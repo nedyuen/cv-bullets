@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Layers, BookOpen, Target, Briefcase, Building2, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, Layers, BookOpen, Target, Briefcase, Building2, Settings, Menu, X, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -36,6 +38,16 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         </NavLink>
       ))}
     </nav>
+  );
+}
+
+function SignOutButton() {
+  const { signOut } = useAuth();
+  return (
+    <Button variant="ghost" size="sm" className="justify-start text-muted-foreground" onClick={() => signOut()}>
+      <LogOut className="h-4 w-4" />
+      Sign Out
+    </Button>
   );
 }
 
@@ -132,6 +144,9 @@ export function AppShell() {
           </button>
         </div>
         <NavList onNavigate={closeMobileNav} />
+        <div className="mt-auto pt-3 border-t border-border">
+          <SignOutButton />
+        </div>
       </div>
 
       {/* Desktop persistent sidebar */}
@@ -140,6 +155,9 @@ export function AppShell() {
           <BrandMark />
         </div>
         <NavList />
+        <div className="mt-auto pt-3 border-t border-border">
+          <SignOutButton />
+        </div>
       </aside>
 
       <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
