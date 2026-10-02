@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { PageHeader } from "@/components/common/page-header";
-import { StatusBadge } from "@/components/common/status-badge";
+import { StatusBadge, ApplicationStageBadge } from "@/components/common/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,8 +55,10 @@ export function ApplicationDetailPage() {
 
       <div className="flex items-center gap-2 flex-wrap -mt-2">
         {app.status === "archived" && <StatusBadge status={app.status} />}
+        <ApplicationStageBadge stage={app.application_stage} />
         {app.job_types?.name && <Badge variant="secondary">{app.job_types.name}</Badge>}
         {app.date_applied && <Badge variant="outline">Applied {app.date_applied}</Badge>}
+        {app.target_salary && <Badge variant="outline">Target: {app.target_salary}</Badge>}
       </div>
 
       {(workspaces.data?.length ?? 0) > 0 && (

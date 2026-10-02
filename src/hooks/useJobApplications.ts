@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { JobApplication, Status } from "@/types/database";
+import type { ApplicationStage, JobApplication, Status } from "@/types/database";
+
+export const APPLICATION_STAGES: { value: ApplicationStage; label: string }[] = [
+  { value: "pending_application", label: "Pending Application" },
+  { value: "applied", label: "Applied" },
+  { value: "pending_interview", label: "Pending Interview" },
+  { value: "interviewed", label: "Interviewed" },
+  { value: "rejected", label: "Rejected" },
+];
 
 export interface JobApplicationWithContext extends JobApplication {
   companies: { id: string; name: string } | null;
@@ -45,6 +53,8 @@ export interface JobApplicationInput {
   job_type_id?: string | null;
   date_applied?: string | null;
   job_posting_url?: string | null;
+  target_salary?: string | null;
+  application_stage?: ApplicationStage;
 }
 
 export function useCreateJobApplication() {

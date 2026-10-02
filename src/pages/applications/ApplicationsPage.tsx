@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
-import { StatusBadge } from "@/components/common/status-badge";
+import { StatusBadge, ApplicationStageBadge } from "@/components/common/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -40,9 +40,13 @@ export function ApplicationsPage() {
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {app.job_types?.name ?? "No Job Type"} {app.date_applied && `· Applied ${app.date_applied}`}
+                    {app.target_salary && ` · ${app.target_salary}`}
                   </p>
                 </div>
-                {app.status === "archived" && <StatusBadge status={app.status} />}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <ApplicationStageBadge stage={app.application_stage} />
+                  {app.status === "archived" && <StatusBadge status={app.status} />}
+                </div>
               </CardContent>
             </Card>
           </Link>

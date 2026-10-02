@@ -521,9 +521,17 @@ Fields:
 - Date Applied
 - Job Type
 - Job Posting URL
+- Target Salary
+- Application Status
 - Status
 - Created At
 - Updated At
+
+Target Salary is free-text (it may be a figure, a range, or include a currency symbol — no structured currency/range handling is built).
+
+Application Status tracks where the application sits in the pipeline: Pending Application, Applied, Pending Interview, Interviewed, Rejected. This is distinct from Status, which is the standard soft-archive field (§47) shared with every other entity — Application Status tracks progress, Status tracks whether the record itself is archived.
+
+Company is a plain free-text field for a Job Application, not a dropdown — the user is applying to companies, which are not necessarily companies they have a Career Role history with (contrast Career Role's Company, §8, which is always a company actually worked for). On save, the typed name is resolved to an existing Company record by case-insensitive name match if one exists, otherwise a new Company record is created — so the underlying relationship is still the same shared `companies` table and FK as Career Role → Company (§7); only the entry UX differs (no picker, no list of existing companies to choose from).
 
 Do not add a Job Description field to the MVP. This is not a full ATS.
 
@@ -1006,6 +1014,8 @@ job_applications:
 - job_type_id
 - date_applied
 - job_posting_url
+- target_salary (added in migration 0005, free text)
+- application_stage (added in migration 0005: 'pending_application' | 'applied' | 'pending_interview' | 'interviewed' | 'rejected', defaults to 'pending_application'; distinct from `status` — see §26)
 - status
 - created_at
 - updated_at

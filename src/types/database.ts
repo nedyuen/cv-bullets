@@ -113,6 +113,8 @@ export interface MasterWordingJobType {
   job_type_id: string;
 }
 
+export type ApplicationStage = "pending_application" | "applied" | "pending_interview" | "interviewed" | "rejected";
+
 export interface JobApplication {
   id: string;
   company_id: string;
@@ -120,6 +122,8 @@ export interface JobApplication {
   job_type_id: string | null;
   date_applied: string | null;
   job_posting_url: string | null;
+  target_salary: string | null;
+  application_stage: ApplicationStage;
   status: Status;
   created_at: string;
   updated_at: string;
