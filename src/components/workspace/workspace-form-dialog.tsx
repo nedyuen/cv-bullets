@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import { useJobTypes } from "@/hooks/useSettings";
+import { MultiSelect } from "@/components/common/multi-select";
+import { useCompetencies, useJobTypes } from "@/hooks/useSettings";
 import { useJobApplications } from "@/hooks/useJobApplications";
 import { useCreateWorkspace } from "@/hooks/useWorkspaces";
 import { Plus } from "lucide-react";
@@ -18,8 +19,10 @@ export function WorkspaceFormDialog() {
   const [name, setName] = useState("");
   const [jobTypeId, setJobTypeId] = useState<string>(NONE);
   const [jobApplicationId, setJobApplicationId] = useState<string>(NONE);
+  const [competencyIds, setCompetencyIds] = useState<string[]>([]);
 
   const jobTypes = useJobTypes();
+  const competencies = useCompetencies();
   const applications = useJobApplications();
   const create = useCreateWorkspace();
   const { toast } = useToast();
@@ -32,6 +35,7 @@ export function WorkspaceFormDialog() {
         name: name.trim(),
         job_type_id: jobTypeId === NONE ? null : jobTypeId,
         job_application_id: jobApplicationId === NONE ? null : jobApplicationId,
+        competencyIds,
       },
       {
         onSuccess: (workspace) => {
@@ -75,6 +79,15 @@ export function WorkspaceFormDialog() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Target Competencies</Label>
+            <MultiSelect
+              options={(competencies.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              selected={competencyIds}
+              onChange={setCompetencyIds}
+              placeholder="Select Competencies"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Job Application (optional)</Label>

@@ -4,12 +4,15 @@ import type { Achievement, Status } from "@/types/database";
 
 export interface AchievementFilters {
   search?: string;
-  jobTypeId?: string;
-  competencyId?: string;
-  companyId?: string;
-  careerRoleId?: string;
-  projectId?: string;
-  tagId?: string;
+  // Each array is OR'd within itself (e.g. Job Type A OR Job Type B), then
+  // AND'd against every other filter dimension via the id-set intersection
+  // below. An empty/omitted array means "no filter" for that dimension.
+  jobTypeIds?: string[];
+  competencyIds?: string[];
+  companyIds?: string[];
+  careerRoleIds?: string[];
+  projectIds?: string[];
+  tagIds?: string[];
   mandatory?: boolean;
   includeArchived?: boolean;
   // Tri-state: undefined = any, true = has, false = doesn't have (spec §41).
@@ -24,20 +27,20 @@ function intersect(sets: Array<Set<string> | null>): Set<string> | null {
   return active.reduce((acc, s) => new Set([...acc].filter((id) => s.has(id))));
 }
 
-async function idsForProject(projectId: string): Promise<Set<string>> {
+async function idsForProjects(projectIds: string[]): Promise<Set<string>> {
   // Reads the achievement_relevant_projects view, not achievement_projects
   // directly — Compound Achievements' Projects are inherited from their
   // components, not manually assigned (see migration 0004).
-  const { data, error } = await supabase.from("achievement_relevant_projects").select("achievement_id").eq("project_id", projectId);
+  const { data, error } = await supabase.from("achievement_relevant_projects").select("achievement_id").in("project_id", projectIds);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
-async function idsForCareerRole(careerRoleId: string): Promise<Set<string>> {
+async function idsForCareerRoles(careerRoleIds: string[]): Promise<Set<string>> {
   const { data: projects, error: pErr } = await supabase
     .from("projects")
     .select("id")
-    .eq("career_role_id", careerRoleId);
+    .in("career_role_id", careerRoleIds);
   if (pErr) throw pErr;
   const projectIds = (projects ?? []).map((p) => p.id);
   if (projectIds.length === 0) return new Set();
@@ -49,8 +52,8 @@ async function idsForCareerRole(careerRoleId: string): Promise<Set<string>> {
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
-async function idsForCompany(companyId: string): Promise<Set<string>> {
-  const { data: roles, error: rErr } = await supabase.from("career_roles").select("id").eq("company_id", companyId);
+async function idsForCompanies(companyIds: string[]): Promise<Set<string>> {
+  const { data: roles, error: rErr } = await supabase.from("career_roles").select("id").in("company_id", companyIds);
   if (rErr) throw rErr;
   const roleIds = (roles ?? []).map((r) => r.id);
   if (roleIds.length === 0) return new Set();
@@ -66,26 +69,26 @@ async function idsForCompany(companyId: string): Promise<Set<string>> {
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
-async function idsForCompetency(competencyId: string): Promise<Set<string>> {
+async function idsForCompetencies(competencyIds: string[]): Promise<Set<string>> {
   const { data, error } = await supabase
     .from("achievement_competencies")
     .select("achievement_id")
-    .eq("competency_id", competencyId);
+    .in("competency_id", competencyIds);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
-async function idsForTag(tagId: string): Promise<Set<string>> {
-  const { data, error } = await supabase.from("achievement_tags").select("achievement_id").eq("tag_id", tagId);
+async function idsForTags(tagIds: string[]): Promise<Set<string>> {
+  const { data, error } = await supabase.from("achievement_tags").select("achievement_id").in("tag_id", tagIds);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
-async function idsForJobType(jobTypeId: string): Promise<Set<string>> {
+async function idsForJobTypes(jobTypeIds: string[]): Promise<Set<string>> {
   const { data, error } = await supabase
     .from("achievement_relevant_job_types")
     .select("achievement_id")
-    .eq("job_type_id", jobTypeId);
+    .in("job_type_id", jobTypeIds);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
@@ -182,12 +185,12 @@ export function useAchievements(filters: AchievementFilters = {}) {
     queryFn: async () => {
       const term = filters.search?.trim();
       const idSets = await Promise.all([
-        filters.projectId ? idsForProject(filters.projectId) : Promise.resolve(null),
-        filters.careerRoleId ? idsForCareerRole(filters.careerRoleId) : Promise.resolve(null),
-        filters.companyId ? idsForCompany(filters.companyId) : Promise.resolve(null),
-        filters.competencyId ? idsForCompetency(filters.competencyId) : Promise.resolve(null),
-        filters.tagId ? idsForTag(filters.tagId) : Promise.resolve(null),
-        filters.jobTypeId ? idsForJobType(filters.jobTypeId) : Promise.resolve(null),
+        filters.projectIds?.length ? idsForProjects(filters.projectIds) : Promise.resolve(null),
+        filters.careerRoleIds?.length ? idsForCareerRoles(filters.careerRoleIds) : Promise.resolve(null),
+        filters.companyIds?.length ? idsForCompanies(filters.companyIds) : Promise.resolve(null),
+        filters.competencyIds?.length ? idsForCompetencies(filters.competencyIds) : Promise.resolve(null),
+        filters.tagIds?.length ? idsForTags(filters.tagIds) : Promise.resolve(null),
+        filters.jobTypeIds?.length ? idsForJobTypes(filters.jobTypeIds) : Promise.resolve(null),
         term ? idsForSearchTerm(term) : Promise.resolve(null),
       ]);
       const idFilter = intersect(idSets);
@@ -340,6 +343,24 @@ export function useUpdateAchievement() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["achievements"] });
       qc.invalidateQueries({ queryKey: ["achievements", "classification", variables.id] });
+    },
+  });
+}
+
+// Narrow edit of just Notes + Competencies (used from the Workspace Add dialog),
+// so callers don't need to round-trip the whole AchievementInput.
+export function useQuickEditAchievement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, notes, competencyIds }: { id: string; notes: string | null; competencyIds: string[] }) => {
+      const { error } = await supabase.from("achievements").update({ notes }).eq("id", id);
+      if (error) throw error;
+      await syncJoinTable("achievement_competencies", "competency_id", id, competencyIds);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["achievements"] });
+      // Competencies feed the Workspace include/exclude recommendation.
+      qc.invalidateQueries({ queryKey: ["workspaces", "targetMatches"] });
     },
   });
 }

@@ -17,7 +17,7 @@ import type { Status } from "@/types/database";
 import { Link } from "react-router-dom";
 
 function ProjectAchievementsList({ projectId, includeArchived }: { projectId: string; includeArchived: boolean }) {
-  const achievements = useAchievements({ projectId, includeArchived });
+  const achievements = useAchievements({ projectIds: [projectId], includeArchived });
 
   if (achievements.isLoading) {
     return <p className="text-sm text-muted-foreground px-2 py-1.5">Loading…</p>;

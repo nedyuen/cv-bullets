@@ -7,6 +7,7 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { WorkspacesPage } from "@/pages/workspaces/WorkspacesPage";
 import { WorkspaceDetailPage } from "@/pages/workspaces/WorkspaceDetailPage";
+import { AddAchievementsPage } from "@/pages/workspaces/AddAchievementsPage";
 import { AchievementsPage } from "@/pages/achievements/AchievementsPage";
 import { AchievementDetailPage } from "@/pages/achievements/AchievementDetailPage";
 import { MasterViewsPage } from "@/pages/achievements/MasterViewsPage";
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/workspaces" element={<WorkspacesPage />} />
           <Route path="/workspaces/:id" element={<WorkspaceDetailPage />} />
+          <Route path="/workspaces/:id/add" element={<AddAchievementsPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/achievements/:id" element={<AchievementDetailPage />} />
           <Route path="/master-views" element={<MasterViewsPage />} />

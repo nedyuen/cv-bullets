@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { ErrorBoundary } from "@/components/common/error-boundary";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Layers, BookOpen, Target, Briefcase, Building2, Settings, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ function BrandMark() {
 }
 
 export function AppShell() {
+  const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -162,7 +164,9 @@ export function AppShell() {
 
       <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
         <div className="container max-w-6xl py-6 md:py-8">
-          <Outlet />
+          <ErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>

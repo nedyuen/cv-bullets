@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/common/multi-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +36,12 @@ function triState(value: string): boolean | undefined {
 
 export function AchievementsPage() {
   const [search, setSearch] = useState("");
-  const [jobTypeId, setJobTypeId] = useState<string>(ANY);
-  const [competencyId, setCompetencyId] = useState<string>(ANY);
-  const [companyId, setCompanyId] = useState<string>(ANY);
-  const [careerRoleId, setCareerRoleId] = useState<string>(ANY);
-  const [projectId, setProjectId] = useState<string>(ANY);
-  const [tagId, setTagId] = useState<string>(ANY);
+  const [jobTypeIds, setJobTypeIds] = useState<string[]>([]);
+  const [competencyIds, setCompetencyIds] = useState<string[]>([]);
+  const [companyIds, setCompanyIds] = useState<string[]>([]);
+  const [careerRoleIds, setCareerRoleIds] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [mandatoryOnly, setMandatoryOnly] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [hasMasterWording, setHasMasterWording] = useState<string>(ANY);
@@ -58,12 +59,12 @@ export function AchievementsPage() {
 
   const filters: AchievementFilters = {
     search,
-    jobTypeId: jobTypeId === ANY ? undefined : jobTypeId,
-    competencyId: competencyId === ANY ? undefined : competencyId,
-    companyId: companyId === ANY ? undefined : companyId,
-    careerRoleId: careerRoleId === ANY ? undefined : careerRoleId,
-    projectId: projectId === ANY ? undefined : projectId,
-    tagId: tagId === ANY ? undefined : tagId,
+    jobTypeIds: jobTypeIds.length ? jobTypeIds : undefined,
+    competencyIds: competencyIds.length ? competencyIds : undefined,
+    companyIds: companyIds.length ? companyIds : undefined,
+    careerRoleIds: careerRoleIds.length ? careerRoleIds : undefined,
+    projectIds: projectIds.length ? projectIds : undefined,
+    tagIds: tagIds.length ? tagIds : undefined,
     mandatory: mandatoryOnly ? true : undefined,
     includeArchived,
     hasMasterWording: triState(hasMasterWording),
@@ -72,12 +73,12 @@ export function AchievementsPage() {
   };
 
   const activeFilterCount = [
-    jobTypeId !== ANY,
-    competencyId !== ANY,
-    companyId !== ANY,
-    careerRoleId !== ANY,
-    projectId !== ANY,
-    tagId !== ANY,
+    jobTypeIds.length > 0,
+    competencyIds.length > 0,
+    companyIds.length > 0,
+    careerRoleIds.length > 0,
+    projectIds.length > 0,
+    tagIds.length > 0,
     mandatoryOnly,
     includeArchived,
     hasMasterWording !== ANY,
@@ -134,48 +135,42 @@ export function AchievementsPage() {
             </Button>
           </div>
           <div className={cn("grid grid-cols-2 gap-2 md:grid-cols-4", filtersOpen ? "grid" : "hidden md:grid")}>
-            <Select value={jobTypeId} onValueChange={setJobTypeId}>
-              <SelectTrigger><SelectValue placeholder="Job Type" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Job Type</SelectItem>
-                {(jobTypes.data ?? []).map((j) => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={competencyId} onValueChange={setCompetencyId}>
-              <SelectTrigger><SelectValue placeholder="Competency" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Competency</SelectItem>
-                {(competencies.data ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={companyId} onValueChange={setCompanyId}>
-              <SelectTrigger><SelectValue placeholder="Company" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Company</SelectItem>
-                {(companies.data ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={careerRoleId} onValueChange={setCareerRoleId}>
-              <SelectTrigger><SelectValue placeholder="Career Role" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Career Role</SelectItem>
-                {(careerRoles.data ?? []).map((r) => <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger><SelectValue placeholder="Project" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Project</SelectItem>
-                {(projects.data ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={tagId} onValueChange={setTagId}>
-              <SelectTrigger><SelectValue placeholder="Tag" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any Tag</SelectItem>
-                {(tags.data ?? []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={(jobTypes.data ?? []).map((j) => ({ value: j.id, label: j.name }))}
+              selected={jobTypeIds}
+              onChange={setJobTypeIds}
+              placeholder="Job Type"
+            />
+            <MultiSelect
+              options={(competencies.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              selected={competencyIds}
+              onChange={setCompetencyIds}
+              placeholder="Competency"
+            />
+            <MultiSelect
+              options={(companies.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              selected={companyIds}
+              onChange={setCompanyIds}
+              placeholder="Company"
+            />
+            <MultiSelect
+              options={(careerRoles.data ?? []).map((r) => ({ value: r.id, label: r.title }))}
+              selected={careerRoleIds}
+              onChange={setCareerRoleIds}
+              placeholder="Career Role"
+            />
+            <MultiSelect
+              options={(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+              selected={projectIds}
+              onChange={setProjectIds}
+              placeholder="Project"
+            />
+            <MultiSelect
+              options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))}
+              selected={tagIds}
+              onChange={setTagIds}
+              placeholder="Tag"
+            />
             <Select value={hasMasterWording} onValueChange={setHasMasterWording}>
               <SelectTrigger><SelectValue placeholder="Has Master Wording" /></SelectTrigger>
               <SelectContent>

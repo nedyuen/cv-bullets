@@ -45,13 +45,77 @@ export interface WorkspaceInput {
   job_application_id?: string | null;
 }
 
+export function useWorkspaceCompetencyIds(workspaceId: string | undefined) {
+  return useQuery({
+    queryKey: ["workspaces", "competencies", workspaceId],
+    enabled: !!workspaceId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cv_workspace_competencies").select("competency_id").eq("workspace_id", workspaceId!);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.competency_id as string);
+    },
+  });
+}
+
+// Which Achievements match a Workspace's targets, for the include/exclude
+// recommendation. Job Type matches read achievement_relevant_job_types (direct
+// ∪ inherited, spec §15), never the raw direct table.
+export function useWorkspaceTargetMatches(jobTypeId: string | null, competencyIds: string[]) {
+  return useQuery({
+    queryKey: ["workspaces", "targetMatches", jobTypeId, competencyIds],
+    queryFn: async () => {
+      const [jt, comp] = await Promise.all([
+        jobTypeId
+          ? supabase.from("achievement_relevant_job_types").select("achievement_id").eq("job_type_id", jobTypeId)
+          : Promise.resolve({ data: [], error: null }),
+        competencyIds.length
+          ? supabase.from("achievement_competencies").select("achievement_id, competency_id").in("competency_id", competencyIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (jt.error) throw jt.error;
+      if (comp.error) throw comp.error;
+      const jobTypeMatches = new Set((jt.data ?? []).map((r) => r.achievement_id as string));
+      const competencyMatches = new Map<string, string[]>();
+      for (const r of comp.data ?? []) {
+        const arr = competencyMatches.get(r.achievement_id) ?? [];
+        arr.push(r.competency_id);
+        competencyMatches.set(r.achievement_id, arr);
+      }
+      return { jobTypeMatches, competencyMatches };
+    },
+  });
+}
+
+export function useSetWorkspaceCompetencies() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ workspaceId, competencyIds }: { workspaceId: string; competencyIds: string[] }) => {
+      const { error: delError } = await supabase.from("cv_workspace_competencies").delete().eq("workspace_id", workspaceId);
+      if (delError) throw delError;
+      if (competencyIds.length === 0) return;
+      const { error } = await supabase
+        .from("cv_workspace_competencies")
+        .insert(competencyIds.map((competency_id) => ({ workspace_id: workspaceId, competency_id })));
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspaces"] }),
+  });
+}
+
 export function useCreateWorkspace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: WorkspaceInput) => {
+    mutationFn: async ({ competencyIds = [], ...input }: WorkspaceInput & { competencyIds?: string[] }) => {
       const { data, error } = await supabase.from("cv_workspaces").insert(input).select().single();
       if (error) throw error;
-      return data as CvWorkspace;
+      const workspace = data as CvWorkspace;
+      if (competencyIds.length > 0) {
+        const { error: compError } = await supabase
+          .from("cv_workspace_competencies")
+          .insert(competencyIds.map((competency_id) => ({ workspace_id: workspace.id, competency_id })));
+        if (compError) throw compError;
+      }
+      return workspace;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["workspaces"] }),
   });
@@ -66,6 +130,24 @@ export function useUpdateWorkspace() {
       return data as CvWorkspace;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["workspaces"] }),
+  });
+}
+
+// Permanent deletion (not archive). Cascades to the Workspace's items and
+// target Competencies at the DB level; Application Wordings saved from it are
+// independent records and are unaffected.
+export function useDeleteWorkspace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("cv_workspaces").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["workspaces"] });
+      qc.invalidateQueries({ queryKey: ["workspaceItems"] });
+      qc.invalidateQueries({ queryKey: ["workspaceUsage"] });
+    },
   });
 }
 

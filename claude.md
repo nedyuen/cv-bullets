@@ -544,6 +544,7 @@ Fields/concepts:
 
 - Name
 - Target Job Type
+- Target Competencies (multi-select, optional; stored in `cv_workspace_competencies`, added in migration 0010; editable later from the Workspace page, which only affects future include/exclude recommendations, not Achievements already added)
 - Optional Job Application
 - Status
 - Selected Achievements
@@ -590,7 +591,13 @@ This protects CV drafts from unexpected library changes.
 
 ## 31. Selecting Wording in a Workspace
 
-When adding an Achievement:
+Adding Achievements happens on its own page (`/workspaces/:id/add`, reached from the Workspace's Add Achievement button), not a pop-up. A row of quick filters (All / Included / Needs wording / Excluded, each with a count) lets the user jump straight to included Achievements that still lack wording. The page splits the library into "Recommended to include" and "Recommended to exclude". Each Achievement has a checkbox (include/exclude, user can override either way); clicking the Achievement expands its wording picker inline, so inclusion and wording are decided together on one screen. Picking a wording for an excluded Achievement includes it. The Add button is disabled while any included Achievement still has no wording. Wording text in the picker is selectable/copyable (so it can be pasted into custom text), and each expanded Achievement has a second tab showing its Description, Significance & Impact and Feedback read-only, with quick edit of its Notes and Competencies (saved straight to the Achievement, and they feed the recommendation).
+
+- Mandatory Achievements are always recommended for inclusion.
+- Otherwise an Achievement is recommended for inclusion if it matches the Workspace's target Job Type (via `achievement_relevant_job_types`, i.e. direct ∪ inherited) or any of its target Competencies.
+- Everything else is recommended for exclusion.
+
+Wording selection per Achievement:
 
 - If exactly one obvious matching Master Wording exists, automatically select it.
 - If multiple matching Master Wordings exist, ask the user to choose.
@@ -780,6 +787,8 @@ Filters:
 - Has Application Wording
 - Workspace usage
 
+Job Type, Competency, Project, Company, Career Role and Tags each support selecting multiple values at once, combined with OR within that filter (e.g. Job Type A or Job Type B) — selecting nothing in a filter means no constraint from it (equivalent to the old single-select "Any"). Different filter dimensions still combine with AND (e.g. (Job Type A OR B) AND (Company X)). The two-valued filters (Mandatory/Optional, Active/Archived, Has Master Wording, Has Application Wording, Workspace usage) remain single-select, since "OR" doesn't add anything meaningful to a toggle.
+
 Search exists both for retrieval and inspiration.
 
 ## 42. Achievement Detail Page
@@ -876,6 +885,8 @@ Deleting an Achievement:
 - otherwise shows a warning summarising what will be deleted (e.g. Master Wording count) before the user confirms.
 
 This is a narrow, explicit exception to the soft-archive default in §47 — it exists because Master Wordings, Application Wordings and Compound Achievement components are exactly the kind of provenance the system otherwise protects, so deletion must never silently orphan or corrupt them.
+
+CV Workspaces are the second exception: a Workspace can be permanently deleted from its page (after a confirmation) as well as archived. Deleting removes the Workspace, its selected Achievement rows (wording snapshots) and its target Competencies. It is never blocked, because nothing else depends on a Workspace: Achievements, Master Wordings and any Application Wordings saved from it are separate records and are unaffected.
 
 ## 48. IDs
 
@@ -1048,6 +1059,11 @@ cv_workspaces:
 - status
 - created_at
 - updated_at
+
+cv_workspace_competencies (migration 0010):
+
+- workspace_id
+- competency_id
 
 cv_workspace_achievements:
 

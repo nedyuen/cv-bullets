@@ -34,7 +34,7 @@ export function MasterViewsPage() {
   const [jobTypeId, setJobTypeId] = useState<string | undefined>(undefined);
 
   const jobTypes = useJobTypes();
-  const achievements = useAchievements({ jobTypeId });
+  const achievements = useAchievements({ jobTypeIds: jobTypeId ? [jobTypeId] : undefined });
   const ids = useMemo(() => (achievements.data ?? []).map((a) => a.id), [achievements.data]);
   const masterWordings = useMasterWordingsForAchievements(ids);
   const achievementProjects = useAchievementProjectsMap(ids);

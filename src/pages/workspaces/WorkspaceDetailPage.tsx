@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
@@ -7,16 +7,20 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WorkspaceItemRow } from "@/components/workspace/workspace-item-row";
-import { AddAchievementDialog } from "@/components/workspace/add-achievement-dialog";
+import { DeleteWorkspaceDialog } from "@/components/workspace/delete-workspace-dialog";
+import { EditWorkspaceCompetenciesDialog } from "@/components/workspace/edit-workspace-competencies-dialog";
 import { CopyToWordButton } from "@/components/workspace/copy-to-word-button";
-import { useWorkspace, useWorkspaceItems, useReorderWorkspaceItems, useUpdateWorkspace } from "@/hooks/useWorkspaces";
-import { Archive, RotateCcw } from "lucide-react";
+import { useWorkspace, useWorkspaceItems, useWorkspaceCompetencyIds, useReorderWorkspaceItems, useUpdateWorkspace } from "@/hooks/useWorkspaces";
+import { useCompetencies } from "@/hooks/useSettings";
+import { Archive, Plus, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export function WorkspaceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const workspace = useWorkspace(id);
   const items = useWorkspaceItems(id);
+  const competencyIds = useWorkspaceCompetencyIds(id);
+  const competencies = useCompetencies();
   const reorder = useReorderWorkspaceItems();
   const updateWorkspace = useUpdateWorkspace();
   const { toast } = useToast();
@@ -54,11 +58,12 @@ export function WorkspaceDetailPage() {
         title={w.name}
         actions={
           <div className="flex items-center gap-2">
-            <AddAchievementDialog
-              workspaceId={w.id}
-              targetJobTypeId={w.job_type_id}
-              existingAchievementIds={(items.data ?? []).map((i) => i.achievement_id)}
-            />
+            <Button asChild size="sm">
+              <Link to={`/workspaces/${w.id}/add`}>
+                <Plus className="h-4 w-4" /> Add Achievement
+              </Link>
+            </Button>
+            <EditWorkspaceCompetenciesDialog workspaceId={w.id} competencyIds={competencyIds.data ?? []} />
             <CopyToWordButton items={orderedItems} />
             <Button
               size="sm"
@@ -72,6 +77,7 @@ export function WorkspaceDetailPage() {
             >
               {w.status === "active" ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
             </Button>
+            <DeleteWorkspaceDialog workspaceId={w.id} name={w.name} itemCount={(items.data ?? []).length} />
           </div>
         }
       />
@@ -79,6 +85,11 @@ export function WorkspaceDetailPage() {
       <div className="flex items-center gap-2 flex-wrap">
         <StatusBadge status={w.status} />
         {w.job_types?.name && <Badge variant="secondary">Target: {w.job_types.name}</Badge>}
+        {(competencyIds.data ?? []).map((cid) => (
+          <Badge key={cid} variant="secondary">
+            {competencies.data?.find((c) => c.id === cid)?.name}
+          </Badge>
+        ))}
         {w.job_applications && (
           <Badge variant="outline">
             Linked to {w.job_applications.company_name} — {w.job_applications.job_title}

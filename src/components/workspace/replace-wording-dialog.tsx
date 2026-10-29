@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/toast";
 import { useMasterWordingsForAchievement } from "@/hooks/useMasterWordings";
 import { useJobTypes } from "@/hooks/useSettings";
 import { useReplaceWorkspaceItemWording } from "@/hooks/useWorkspaces";
-import { WordingGroup, WordingOption } from "@/components/workspace/add-achievement-dialog";
+import { WordingGroup, WordingOption } from "@/components/workspace/add-achievements-view";
 import { RefreshCw } from "lucide-react";
 
 export function ReplaceWordingDialog({
