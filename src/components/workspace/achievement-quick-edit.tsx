@@ -9,9 +9,10 @@ import { useAchievementClassification, useQuickEditAchievement } from "@/hooks/u
 import { useCompetencies } from "@/hooks/useSettings";
 import type { Achievement } from "@/types/database";
 
-// Quick edit of an Achievement's Notes and Competencies without leaving the
+// Quick edit of an Achievement's Draft, Notes and Competencies without leaving the
 // Workspace. Drafts are null until touched, so the fields track saved data.
 export function AchievementQuickEdit({ achievement }: { achievement: Achievement }) {
+  const [draftEdit, setDraftEdit] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   const [competencyDraft, setCompetencyDraft] = useState<string[] | null>(null);
   const classification = useAchievementClassification(achievement.id);
@@ -19,15 +20,17 @@ export function AchievementQuickEdit({ achievement }: { achievement: Achievement
   const save = useQuickEditAchievement();
   const { toast } = useToast();
 
+  const draft = draftEdit ?? achievement.draft ?? "";
   const notes = notesDraft ?? achievement.notes ?? "";
   const competencyIds = competencyDraft ?? classification.data?.competencyIds ?? [];
-  const dirty = notesDraft !== null || competencyDraft !== null;
+  const dirty = draftEdit !== null || notesDraft !== null || competencyDraft !== null;
 
   const submit = () =>
     save.mutate(
-      { id: achievement.id, notes: notes.trim() ? notes : null, competencyIds },
+      { id: achievement.id, draft: draft.trim() ? draft : null, notes: notes.trim() ? notes : null, competencyIds },
       {
         onSuccess: () => {
+          setDraftEdit(null);
           setNotesDraft(null);
           setCompetencyDraft(null);
           toast({ title: "Achievement updated", variant: "success" });
@@ -38,6 +41,10 @@ export function AchievementQuickEdit({ achievement }: { achievement: Achievement
 
   return (
     <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label>Draft</Label>
+        <Textarea value={draft} onChange={(e) => setDraftEdit(e.target.value)} rows={4} placeholder="Scratch pad for draft or backup write-ups not yet used..." />
+      </div>
       <div className="space-y-1.5">
         <Label>Notes</Label>
         <Textarea value={notes} onChange={(e) => setNotesDraft(e.target.value)} rows={4} placeholder="Anything worth remembering about this Achievement..." />

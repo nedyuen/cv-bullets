@@ -232,8 +232,10 @@ Fields:
 - Description
 - Significance & Impact
 - Feedback
+- Draft (added in migration 0011)
 - Notes
-- Mandatory / Optional
+- Rating (High / Medium / Low, migration 0012)
+- Rating Rationale (optional short text, migration 0012)
 - Status
 - Created At
 - Updated At
@@ -246,9 +248,11 @@ Significance & Impact explains why the achievement is impressive or significant.
 
 Feedback captures feedback from others (e.g. mentors, interview panels, stakeholders) on how to present or frame this specific achievement. It is not general career feedback or a catch-all notes field.
 
+Draft is a free-text scratch pad, shown directly above Notes, for draft or backup write-ups of the achievement that haven't been formalised as a Master Wording or used in an application but are worth keeping. It is deliberately not a wording: no versioning, no Job Types, and it is never copied into a Workspace or Application Wording automatically.
+
 Notes is free-text for the user's own reference: anything else worth remembering about the achievement, with no fixed format. It is kept separate from Feedback.
 
-Mandatory / Optional distinguishes essential achievements from content that can be dropped when space is constrained.
+Rating (High / Medium / Low) replaces the original Mandatory / Optional flag (migration 0012 converted Mandatory to High and Optional to Low; the `mandatory` column no longer exists). High marks the strongest, essential achievements; Low marks content that can be dropped when space is constrained. Rating drives Workspace recommendations: High is always recommended for inclusion, while Medium and Low are recommended only when they match the Workspace's target Job Type or Competencies (§31). Rating Rationale is an optional short single-line text explaining why the rating was chosen.
 
 ## 11. Achievement Classification
 
@@ -476,7 +480,7 @@ The Compound Achievement gets its own:
 - Description
 - Significance & Impact
 - Feedback
-- Mandatory/Optional
+- Rating
 - Competencies
 - Job Type relevance
 - Tags
@@ -591,9 +595,9 @@ This protects CV drafts from unexpected library changes.
 
 ## 31. Selecting Wording in a Workspace
 
-Adding Achievements happens on its own page (`/workspaces/:id/add`, reached from the Workspace's Add Achievement button), not a pop-up. A row of quick filters (All / Included / Needs wording / Excluded, each with a count) lets the user jump straight to included Achievements that still lack wording. The page splits the library into "Recommended to include" and "Recommended to exclude". Each Achievement has a checkbox (include/exclude, user can override either way); clicking the Achievement expands its wording picker inline, so inclusion and wording are decided together on one screen. Picking a wording for an excluded Achievement includes it. The Add button is disabled while any included Achievement still has no wording. Wording text in the picker is selectable/copyable (so it can be pasted into custom text), and each expanded Achievement has a second tab showing its Description, Significance & Impact and Feedback read-only, with quick edit of its Notes and Competencies (saved straight to the Achievement, and they feed the recommendation).
+Adding Achievements happens on its own page (`/workspaces/:id/add`, reached from the Workspace's Add Achievement button), not a pop-up. A row of quick filters (All / Included / Needs wording / Excluded, each with a count) lets the user jump straight to included Achievements that still lack wording. The page splits the library into "Recommended to include" and "Recommended to exclude". Each Achievement has a checkbox (include/exclude, user can override either way); clicking the Achievement expands its wording picker inline, so inclusion and wording are decided together on one screen. Picking a wording for an excluded Achievement includes it. The Add button is disabled while any included Achievement still has no wording. Wording text in the picker is selectable/copyable (so it can be pasted into custom text), and each expanded Achievement has a second tab showing its Description, Significance & Impact and Feedback read-only, with quick edit of its Draft, Notes and Competencies (saved straight to the Achievement, and they feed the recommendation).
 
-- Mandatory Achievements are always recommended for inclusion.
+- High-rated Achievements are always recommended for inclusion.
 - Otherwise an Achievement is recommended for inclusion if it matches the Workspace's target Job Type (via `achievement_relevant_job_types`, i.e. direct ∪ inherited) or any of its target Competencies.
 - Everything else is recommended for exclusion.
 
@@ -613,7 +617,7 @@ Each Workspace item should display:
 
 - sequence number;
 - Achievement;
-- Mandatory/Optional;
+- Rating;
 - selected wording;
 - source;
 - controls to change, remove or view.
@@ -725,7 +729,7 @@ Enterprise AI Transformation
 
 ID: gp561y
 
-Mandatory
+Rating: High
 
 Job Types: AI Transformation, Programme Management
 
@@ -764,6 +768,7 @@ Search across:
 - Description
 - Significance & Impact
 - Feedback
+- Draft
 - Notes
 - Master Wording text
 - Application Wording text
@@ -780,14 +785,14 @@ Filters:
 - Project
 - Company
 - Career Role
-- Mandatory/Optional
+- Rating
 - Tags
 - Active/Archived
 - Has Master Wording
 - Has Application Wording
 - Workspace usage
 
-Job Type, Competency, Project, Company, Career Role and Tags each support selecting multiple values at once, combined with OR within that filter (e.g. Job Type A or Job Type B) — selecting nothing in a filter means no constraint from it (equivalent to the old single-select "Any"). Different filter dimensions still combine with AND (e.g. (Job Type A OR B) AND (Company X)). The two-valued filters (Mandatory/Optional, Active/Archived, Has Master Wording, Has Application Wording, Workspace usage) remain single-select, since "OR" doesn't add anything meaningful to a toggle.
+Job Type, Competency, Project, Company, Career Role, Tags and Rating each support selecting multiple values at once, combined with OR within that filter (e.g. Job Type A or Job Type B) — each of the first six of these dropdowns (not Rating, which has no "none" value) also offers a "(None)" option that matches Achievements with nothing in that dimension (e.g. Project = none; Company and Career Role are reached through Projects, so "none" means no Project), and it is OR'd with any real values selected alongside it — selecting nothing in a filter means no constraint from it (equivalent to the old single-select "Any"). Different filter dimensions still combine with AND (e.g. (Job Type A OR B) AND (Company X)). The two-valued filters (Active/Archived, Has Master Wording, Has Application Wording, Workspace usage) remain single-select, since "OR" doesn't add anything meaningful to a toggle.
 
 Search exists both for retrieval and inspiration.
 
@@ -797,7 +802,7 @@ Show:
 
 1. Header: Subject, ID, status, Edit, Archive.
 2. Career Context: Company, Career Role, Projects.
-3. Achievement information: Description, Significance & Impact, Feedback, Notes.
+3. Achievement information: Description, Significance & Impact, Feedback, Draft, Notes.
 4. Classification: Competencies, direct Job Types, inherited Job Types, Tags.
 5. Master Wordings with versions.
 6. Application Wordings with Application, Company, Job Title, Date Applied, exact wording and source Master Wording/version.
@@ -848,7 +853,7 @@ List, per level:
 - Career Role rows: title, dates, Edit and Archive/Restore controls.
 - Project rows (nested under their Career Role): Project name, Archived badge, linked Achievement count, Edit and Archive/Restore controls.
 
-Each Project row is expandable inline to list its linked Achievements, the same way Company and Career Role rows expand to show what's nested under them. Each listed Achievement shows only its Subject plus Mandatory and Archived badges (no Description), and links to the Achievement detail page. The single Include Archived toggle on this page applies throughout: Companies, Career Roles, Projects, and their listed Achievements.
+Each Project row is expandable inline to list its linked Achievements, the same way Company and Career Role rows expand to show what's nested under them. Each listed Achievement shows only its Subject plus Rating (shown when Medium or High) and Archived badges (no Description), and links to the Achievement detail page. The single Include Archived toggle on this page applies throughout: Companies, Career Roles, Projects, and their listed Achievements.
 
 ## 46. Settings
 
@@ -939,8 +944,10 @@ achievements:
 - description
 - significance_impact
 - feedback
+- draft (added in migration 0011)
 - notes (added in migration 0003)
-- mandatory
+- rating ('high' | 'medium' | 'low', not null, default 'low'; added in migration 0012, replacing the old `mandatory` boolean)
+- rating_rationale (nullable text, migration 0012)
 - status
 - created_at
 - updated_at
@@ -1146,8 +1153,9 @@ Useful information:
 
 - Active Workspaces
 - Active Achievements
-- Mandatory Achievements
-- Optional Achievements
+- High-rated Achievements
+- Medium-rated Achievements
+- Low-rated Achievements
 - Master Wordings
 - Recent Applications
 - Content gaps
@@ -1369,7 +1377,7 @@ The user should be able to quickly answer:
 - What did I actually write in a particular application?
 - Which previous applications used similar wording?
 - Which Achievements have no suitable wording for a target Job Type?
-- Which Achievements are Mandatory versus Optional?
+- Which Achievements are rated High, Medium or Low?
 - Which Achievements can be combined into a reusable Compound Achievement?
 
 The system should achieve this without requiring multiple manually synchronised CV documents.

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MandatoryBadge } from "@/components/common/status-badge";
+import { RatingBadge } from "@/components/common/status-badge";
 import { Link } from "react-router-dom";
 import { ReplaceWordingDialog } from "@/components/workspace/replace-wording-dialog";
 import { SaveAsApplicationWordingDialog } from "@/components/workspace/save-as-application-wording-dialog";
@@ -67,7 +67,7 @@ export function WorkspaceItemRow({
               <Link to={`/achievements/${item.achievement_id}`} className="text-sm font-medium hover:underline">
                 {item.achievements?.subject}
               </Link>
-              <MandatoryBadge mandatory={item.achievements?.mandatory ?? false} />
+              <RatingBadge rating={item.achievements?.rating ?? "low"} />
               <Badge variant="outline">{source}</Badge>
               {edited && <Badge variant="warning">Edited in Workspace</Badge>}
             </div>

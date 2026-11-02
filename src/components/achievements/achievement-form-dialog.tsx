@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MultiSelect } from "@/components/common/multi-select";
@@ -14,6 +14,7 @@ import {
   useCreateAchievement,
   useUpdateAchievement,
   useAchievementClassification,
+  ACHIEVEMENT_RATINGS,
   type AchievementInput,
 } from "@/hooks/useAchievements";
 import { useMasterWordingsForAchievement } from "@/hooks/useMasterWordings";
@@ -21,7 +22,7 @@ import { useCompoundComponents } from "@/hooks/useCompoundAchievements";
 import { AddMasterWordingForm, AddMasterWordingTrigger } from "@/components/achievements/add-master-wording-form";
 import { MasterWordingCard } from "@/components/achievements/master-wording-card";
 import { Badge } from "@/components/ui/badge";
-import type { Achievement } from "@/types/database";
+import type { Achievement, AchievementRating } from "@/types/database";
 import { Plus, Pencil } from "lucide-react";
 
 interface AchievementFormDialogProps {
@@ -38,8 +39,10 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
   const [description, setDescription] = useState("");
   const [significance, setSignificance] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [draft, setDraft] = useState("");
   const [notes, setNotes] = useState("");
-  const [mandatory, setMandatory] = useState(false);
+  const [rating, setRating] = useState<AchievementRating>("low");
+  const [ratingRationale, setRatingRationale] = useState("");
   const [competencyIds, setCompetencyIds] = useState<string[]>([]);
   const [jobTypeIds, setJobTypeIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -70,15 +73,19 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
       setDescription(achievement.description ?? "");
       setSignificance(achievement.significance_impact ?? "");
       setFeedback(achievement.feedback ?? "");
+      setDraft(achievement.draft ?? "");
       setNotes(achievement.notes ?? "");
-      setMandatory(achievement.mandatory);
+      setRating(achievement.rating);
+      setRatingRationale(achievement.rating_rationale ?? "");
     } else {
       setSubject("");
       setDescription("");
       setSignificance("");
       setFeedback("");
+      setDraft("");
       setNotes("");
-      setMandatory(false);
+      setRating("low");
+      setRatingRationale("");
       setCompetencyIds([]);
       setJobTypeIds([]);
       setTagIds([]);
@@ -105,8 +112,10 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
       description: description.trim() || null,
       significance_impact: significance.trim() || null,
       feedback: feedback.trim() || null,
+      draft: draft.trim() || null,
       notes: notes.trim() || null,
-      mandatory,
+      rating,
+      rating_rationale: ratingRationale.trim() || null,
       competencyIds,
       jobTypeIds,
       tagIds,
@@ -181,6 +190,16 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="achievement-draft">Draft</Label>
+                <Textarea
+                  id="achievement-draft"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={4}
+                  placeholder="Scratch pad for draft or backup write-ups that aren't formalised or used yet but are worth keeping."
+                />
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="achievement-notes">Notes</Label>
                 <Textarea
                   id="achievement-notes"
@@ -190,9 +209,27 @@ export function AchievementFormDialog({ achievement, trigger }: AchievementFormD
                   placeholder="Anything else worth remembering, for your own reference — no fixed format."
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="mandatory" checked={mandatory} onCheckedChange={(v) => setMandatory(v === true)} />
-                <Label htmlFor="mandatory">Mandatory (essential — not droppable when space is constrained)</Label>
+              <div className="grid grid-cols-[10rem_1fr] gap-4">
+                <div className="space-y-1.5">
+                  <Label>Rating</Label>
+                  <Select value={rating} onValueChange={(v) => setRating(v as AchievementRating)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ACHIEVEMENT_RATINGS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="achievement-rating-rationale">Rating rationale (optional)</Label>
+                  <Input
+                    id="achievement-rating-rationale"
+                    value={ratingRationale}
+                    onChange={(e) => setRatingRationale(e.target.value)}
+                    placeholder="Why this rating? High is always recommended for a Workspace."
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

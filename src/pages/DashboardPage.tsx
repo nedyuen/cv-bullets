@@ -28,11 +28,12 @@ export function DashboardPage() {
     <div className="space-y-6">
       <PageHeader title="Dashboard" description="A quick view of your career content library." />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <StatCard label="Active Workspaces" value={counts.data?.activeWorkspaces} />
         <StatCard label="Active Achievements" value={counts.data?.activeAchievements} />
-        <StatCard label="Mandatory" value={counts.data?.mandatoryAchievements} />
-        <StatCard label="Optional" value={counts.data?.optionalAchievements} />
+        <StatCard label="High" value={counts.data?.highAchievements} />
+        <StatCard label="Medium" value={counts.data?.mediumAchievements} />
+        <StatCard label="Low" value={counts.data?.lowAchievements} />
         <StatCard label="Master Wordings" value={counts.data?.masterWordings} />
       </div>
 

@@ -35,14 +35,18 @@ export interface Project {
   updated_at: string;
 }
 
+export type AchievementRating = "high" | "medium" | "low";
+
 export interface Achievement {
   id: string;
   subject: string;
   description: string | null;
   significance_impact: string | null;
   feedback: string | null;
+  draft: string | null;
   notes: string | null;
-  mandatory: boolean;
+  rating: AchievementRating;
+  rating_rationale: string | null;
   status: Status;
   created_at: string;
   updated_at: string;

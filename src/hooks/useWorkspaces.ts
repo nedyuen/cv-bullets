@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { CvWorkspace, CvWorkspaceAchievement, Status } from "@/types/database";
+import type { AchievementRating, CvWorkspace, CvWorkspaceAchievement, Status } from "@/types/database";
 
 export interface WorkspaceWithContext extends CvWorkspace {
   job_types: { id: string; name: string } | null;
@@ -167,7 +167,7 @@ export function useWorkspacesForApplication(jobApplicationId: string | undefined
 // Workspace items
 // ---------------------------------------------------------------------------
 export interface WorkspaceItemWithAchievement extends CvWorkspaceAchievement {
-  achievements: { id: string; subject: string; mandatory: boolean } | null;
+  achievements: { id: string; subject: string; rating: AchievementRating } | null;
 }
 
 export function useWorkspaceItems(workspaceId: string | undefined) {
@@ -177,7 +177,7 @@ export function useWorkspaceItems(workspaceId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cv_workspace_achievements")
-        .select("*, achievements(id, subject, mandatory)")
+        .select("*, achievements(id, subject, rating)")
         .eq("workspace_id", workspaceId!)
         .order("display_order");
       if (error) throw error;

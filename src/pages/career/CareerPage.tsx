@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Archive, RotateCcw, Pencil } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
-import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
+import { StatusBadge, RatingBadge } from "@/components/common/status-badge";
 import { CompanyFormDialog } from "@/components/career/company-form-dialog";
 import { CareerRoleFormDialog } from "@/components/career/career-role-form-dialog";
 import { ProjectFormDialog } from "@/components/career/project-form-dialog";
@@ -36,7 +36,7 @@ function ProjectAchievementsList({ projectId, includeArchived }: { projectId: st
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium text-foreground">{a.subject}</span>
-              {a.mandatory && <MandatoryBadge mandatory={a.mandatory} />}
+              {a.rating !== "low" && <RatingBadge rating={a.rating} />}
               {a.status === "archived" && <StatusBadge status={a.status} />}
             </div>
           </div>

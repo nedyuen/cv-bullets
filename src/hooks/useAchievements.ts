@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { Achievement, Status } from "@/types/database";
+import type { Achievement, AchievementRating, Status } from "@/types/database";
+
+export const ACHIEVEMENT_RATINGS: { value: AchievementRating; label: string }[] = [
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
 
 export interface AchievementFilters {
   search?: string;
@@ -13,13 +19,17 @@ export interface AchievementFilters {
   careerRoleIds?: string[];
   projectIds?: string[];
   tagIds?: string[];
-  mandatory?: boolean;
+  ratings?: AchievementRating[]; // OR'd within itself, like the other multi-selects
   includeArchived?: boolean;
   // Tri-state: undefined = any, true = has, false = doesn't have (spec §41).
   hasMasterWording?: boolean;
   hasApplicationWording?: boolean;
   usedInWorkspace?: boolean;
 }
+
+// Sentinel filter value meaning "has none of this" (e.g. Project = none). Mixed
+// with real values it is OR'd like any other value.
+export const NONE = "__none__";
 
 function intersect(sets: Array<Set<string> | null>): Set<string> | null {
   const active = sets.filter((s): s is Set<string> => s !== null);
@@ -103,7 +113,7 @@ async function idsForSearchTerm(term: string): Promise<Set<string>> {
 
   const [ownFields, tags, competencies, projects, careerRoles, companies, masterWordingVersions, applicationWordingVersions] =
     await Promise.all([
-      supabase.from("achievements").select("id").or(`subject.ilike.${like},description.ilike.${like},significance_impact.ilike.${like},feedback.ilike.${like},notes.ilike.${like}`),
+      supabase.from("achievements").select("id").or(`subject.ilike.${like},description.ilike.${like},significance_impact.ilike.${like},feedback.ilike.${like},draft.ilike.${like},notes.ilike.${like}`),
       supabase.from("tags").select("id").ilike("name", like),
       supabase.from("competencies").select("id").ilike("name", like),
       supabase.from("projects").select("id").ilike("name", like),
@@ -179,18 +189,48 @@ async function idsUsedInWorkspace(): Promise<Set<string>> {
   return new Set((data ?? []).map((r) => r.achievement_id));
 }
 
+async function allAchievementIds(): Promise<Set<string>> {
+  const { data, error } = await supabase.from("achievements").select("id").limit(10000);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.id));
+}
+
+async function idsWithAny(table: string, column = "achievement_id"): Promise<Set<string>> {
+  const { data, error } = await supabase.from(table).select(column).limit(10000);
+  if (error) throw error;
+  return new Set(((data ?? []) as unknown as Record<string, string>[]).map((r) => r[column]));
+}
+
+// Resolves one filter dimension: the real values via `byValues`, plus (when the
+// NONE sentinel is selected) every Achievement that has nothing in that dimension.
+async function resolveDimension(
+  values: string[] | undefined,
+  byValues: (ids: string[]) => Promise<Set<string>>,
+  withAnyTable: string,
+): Promise<Set<string> | null> {
+  if (!values?.length) return null;
+  const real = values.filter((v) => v !== NONE);
+  const result = real.length ? await byValues(real) : new Set<string>();
+  if (values.includes(NONE)) {
+    const [all, withAny] = await Promise.all([allAchievementIds(), idsWithAny(withAnyTable)]);
+    for (const id of all) if (!withAny.has(id)) result.add(id);
+  }
+  return result;
+}
+
 export function useAchievements(filters: AchievementFilters = {}) {
   return useQuery({
     queryKey: ["achievements", filters],
     queryFn: async () => {
       const term = filters.search?.trim();
       const idSets = await Promise.all([
-        filters.projectIds?.length ? idsForProjects(filters.projectIds) : Promise.resolve(null),
-        filters.careerRoleIds?.length ? idsForCareerRoles(filters.careerRoleIds) : Promise.resolve(null),
-        filters.companyIds?.length ? idsForCompanies(filters.companyIds) : Promise.resolve(null),
-        filters.competencyIds?.length ? idsForCompetencies(filters.competencyIds) : Promise.resolve(null),
-        filters.tagIds?.length ? idsForTags(filters.tagIds) : Promise.resolve(null),
-        filters.jobTypeIds?.length ? idsForJobTypes(filters.jobTypeIds) : Promise.resolve(null),
+        resolveDimension(filters.projectIds, idsForProjects, "achievement_relevant_projects"),
+        // Career Roles and Companies are reached through Projects, so "none" means no Project.
+        resolveDimension(filters.careerRoleIds, idsForCareerRoles, "achievement_relevant_projects"),
+        resolveDimension(filters.companyIds, idsForCompanies, "achievement_relevant_projects"),
+        resolveDimension(filters.competencyIds, idsForCompetencies, "achievement_competencies"),
+        resolveDimension(filters.tagIds, idsForTags, "achievement_tags"),
+        resolveDimension(filters.jobTypeIds, idsForJobTypes, "achievement_relevant_job_types"),
         term ? idsForSearchTerm(term) : Promise.resolve(null),
       ]);
       const idFilter = intersect(idSets);
@@ -198,7 +238,7 @@ export function useAchievements(filters: AchievementFilters = {}) {
 
       let query = supabase.from("achievements").select("*").order("updated_at", { ascending: false });
       if (!filters.includeArchived) query = query.eq("status", "active");
-      if (filters.mandatory !== undefined) query = query.eq("mandatory", filters.mandatory);
+      if (filters.ratings?.length) query = query.in("rating", filters.ratings);
       if (idFilter !== null) query = query.in("id", [...idFilter]);
 
       const { data, error } = await query;
@@ -278,8 +318,10 @@ export interface AchievementInput {
   description?: string | null;
   significance_impact?: string | null;
   feedback?: string | null;
+  draft?: string | null;
   notes?: string | null;
-  mandatory: boolean;
+  rating: AchievementRating;
+  rating_rationale?: string | null;
   competencyIds: string[];
   jobTypeIds: string[];
   tagIds: string[];
@@ -347,13 +389,13 @@ export function useUpdateAchievement() {
   });
 }
 
-// Narrow edit of just Notes + Competencies (used from the Workspace Add dialog),
+// Narrow edit of just Draft + Notes + Competencies (used from the Workspace Add dialog),
 // so callers don't need to round-trip the whole AchievementInput.
 export function useQuickEditAchievement() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, notes, competencyIds }: { id: string; notes: string | null; competencyIds: string[] }) => {
-      const { error } = await supabase.from("achievements").update({ notes }).eq("id", id);
+    mutationFn: async ({ id, draft, notes, competencyIds }: { id: string; draft: string | null; notes: string | null; competencyIds: string[] }) => {
+      const { error } = await supabase.from("achievements").update({ draft, notes }).eq("id", id);
       if (error) throw error;
       await syncJoinTable("achievement_competencies", "competency_id", id, competencyIds);
     },

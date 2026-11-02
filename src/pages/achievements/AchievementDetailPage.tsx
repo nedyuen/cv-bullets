@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { PageHeader } from "@/components/common/page-header";
-import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
+import { StatusBadge, RatingBadge } from "@/components/common/status-badge";
 import { JobTypeBadges } from "@/components/achievements/job-type-badges";
 import { AchievementFormDialog } from "@/components/achievements/achievement-form-dialog";
 import { AddMasterWordingForm, AddMasterWordingTrigger } from "@/components/achievements/add-master-wording-form";
@@ -82,8 +82,9 @@ export function AchievementDetailPage() {
       />
 
       <div className="flex items-center gap-2 -mt-2">
-        <MandatoryBadge mandatory={a.mandatory} />
+        <RatingBadge rating={a.rating} />
         <StatusBadge status={a.status} />
+        {a.rating_rationale && <span className="text-sm text-muted-foreground">{a.rating_rationale}</span>}
       </div>
 
       {/* Career context, achievement information and classification are grouped
@@ -113,6 +114,10 @@ export function AchievementDetailPage() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Feedback</p>
               <p className="text-sm leading-relaxed">{a.feedback || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Draft</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{a.draft || "—"}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Notes</p>

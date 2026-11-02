@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
-import { StatusBadge, MandatoryBadge } from "@/components/common/status-badge";
+import { StatusBadge, RatingBadge } from "@/components/common/status-badge";
 import { JobTypeBadges } from "@/components/achievements/job-type-badges";
 import { AchievementFormDialog } from "@/components/achievements/achievement-form-dialog";
 import { DeleteAchievementDialog } from "@/components/achievements/delete-achievement-dialog";
@@ -14,7 +14,8 @@ import { MultiSelect } from "@/components/common/multi-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useAchievements, type AchievementFilters } from "@/hooks/useAchievements";
+import { useAchievements, NONE, ACHIEVEMENT_RATINGS, type AchievementFilters } from "@/hooks/useAchievements";
+import type { AchievementRating } from "@/types/database";
 import { useJobTypes, useCompetencies, useTags } from "@/hooks/useSettings";
 import { useCompaniesWithCareerRoles } from "@/hooks/useCompanies";
 import { useCareerRoles } from "@/hooks/useCareerRoles";
@@ -25,6 +26,7 @@ import { useCompoundAchievementIds } from "@/hooks/useCompoundAchievements";
 import { cn } from "@/lib/utils";
 
 const ANY = "__any__";
+const NONE_OPTION = { value: NONE, label: "(None)" };
 const YES = "__yes__";
 const NO = "__no__";
 
@@ -42,7 +44,7 @@ export function AchievementsPage() {
   const [careerRoleIds, setCareerRoleIds] = useState<string[]>([]);
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
-  const [mandatoryOnly, setMandatoryOnly] = useState(false);
+  const [ratings, setRatings] = useState<string[]>([]);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [hasMasterWording, setHasMasterWording] = useState<string>(ANY);
   const [hasApplicationWording, setHasApplicationWording] = useState<string>(ANY);
@@ -65,7 +67,7 @@ export function AchievementsPage() {
     careerRoleIds: careerRoleIds.length ? careerRoleIds : undefined,
     projectIds: projectIds.length ? projectIds : undefined,
     tagIds: tagIds.length ? tagIds : undefined,
-    mandatory: mandatoryOnly ? true : undefined,
+    ratings: ratings.length ? (ratings as AchievementRating[]) : undefined,
     includeArchived,
     hasMasterWording: triState(hasMasterWording),
     hasApplicationWording: triState(hasApplicationWording),
@@ -79,7 +81,7 @@ export function AchievementsPage() {
     careerRoleIds.length > 0,
     projectIds.length > 0,
     tagIds.length > 0,
-    mandatoryOnly,
+    ratings.length > 0,
     includeArchived,
     hasMasterWording !== ANY,
     hasApplicationWording !== ANY,
@@ -136,37 +138,37 @@ export function AchievementsPage() {
           </div>
           <div className={cn("grid grid-cols-2 gap-2 md:grid-cols-4", filtersOpen ? "grid" : "hidden md:grid")}>
             <MultiSelect
-              options={(jobTypes.data ?? []).map((j) => ({ value: j.id, label: j.name }))}
+              options={[NONE_OPTION, ...(jobTypes.data ?? []).map((j) => ({ value: j.id, label: j.name }))]}
               selected={jobTypeIds}
               onChange={setJobTypeIds}
               placeholder="Job Type"
             />
             <MultiSelect
-              options={(competencies.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              options={[NONE_OPTION, ...(competencies.data ?? []).map((c) => ({ value: c.id, label: c.name }))]}
               selected={competencyIds}
               onChange={setCompetencyIds}
               placeholder="Competency"
             />
             <MultiSelect
-              options={(companies.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              options={[NONE_OPTION, ...(companies.data ?? []).map((c) => ({ value: c.id, label: c.name }))]}
               selected={companyIds}
               onChange={setCompanyIds}
               placeholder="Company"
             />
             <MultiSelect
-              options={(careerRoles.data ?? []).map((r) => ({ value: r.id, label: r.title }))}
+              options={[NONE_OPTION, ...(careerRoles.data ?? []).map((r) => ({ value: r.id, label: r.title }))]}
               selected={careerRoleIds}
               onChange={setCareerRoleIds}
               placeholder="Career Role"
             />
             <MultiSelect
-              options={(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+              options={[NONE_OPTION, ...(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))]}
               selected={projectIds}
               onChange={setProjectIds}
               placeholder="Project"
             />
             <MultiSelect
-              options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))}
+              options={[NONE_OPTION, ...(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))]}
               selected={tagIds}
               onChange={setTagIds}
               placeholder="Tag"
@@ -195,10 +197,12 @@ export function AchievementsPage() {
                 <SelectItem value={NO}>Not used in a Workspace</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 px-1">
-              <Checkbox id="mandatoryOnly" checked={mandatoryOnly} onCheckedChange={(v) => setMandatoryOnly(v === true)} />
-              <Label htmlFor="mandatoryOnly" className="font-normal">Mandatory only</Label>
-            </div>
+            <MultiSelect
+              options={ACHIEVEMENT_RATINGS}
+              selected={ratings}
+              onChange={setRatings}
+              placeholder="Rating"
+            />
             <div className="flex items-center gap-2 px-1">
               <Checkbox id="includeArchived" checked={includeArchived} onCheckedChange={(v) => setIncludeArchived(v === true)} />
               <Label htmlFor="includeArchived" className="font-normal">Include Archived</Label>
@@ -230,7 +234,7 @@ export function AchievementsPage() {
                         <Link to={`/achievements/${a.id}`} className="font-semibold text-sm text-foreground hover:underline" onClick={(e) => e.stopPropagation()}>
                           {a.subject}
                         </Link>
-                        {a.mandatory && <MandatoryBadge mandatory={a.mandatory} />}
+                        {a.rating !== "low" && <RatingBadge rating={a.rating} />}
                         {compoundIds.data?.has(a.id) && <Badge variant="secondary">Compound</Badge>}
                         {a.status === "archived" && <StatusBadge status={a.status} />}
                         <span className="hidden sm:inline text-[11px] text-muted-foreground font-mono ml-auto shrink-0">{a.id.slice(0, 8)}</span>

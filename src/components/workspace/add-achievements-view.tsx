@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MandatoryBadge } from "@/components/common/status-badge";
+import { RatingBadge } from "@/components/common/status-badge";
 import { useToast } from "@/components/ui/toast";
 import { AchievementQuickEdit } from "@/components/workspace/achievement-quick-edit";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -67,11 +67,11 @@ export function AddAchievementsView({ workspaceId, targetJobTypeId, targetCompet
     return map;
   }, [masterWordings.data]);
 
-  // Recommendation (user-overridable): Mandatory always, otherwise include if
+  // Recommendation (user-overridable): High rating always, otherwise include if
   // the Achievement matches the Workspace's Job Type or any target Competency.
   const reasonsFor = (a: Achievement): string[] => {
     const reasons: string[] = [];
-    if (a.mandatory) reasons.push("Mandatory");
+    if (a.rating === "high") reasons.push("High rating");
     if (matches.data?.jobTypeMatches.has(a.id)) reasons.push(jobTypes.data?.find((j) => j.id === targetJobTypeId)?.name ?? "Job Type");
     for (const cid of matches.data?.competencyMatches.get(a.id) ?? []) {
       const name = competencies.data?.find((c) => c.id === cid)?.name;
@@ -181,8 +181,8 @@ export function AddAchievementsView({ workspaceId, targetJobTypeId, targetCompet
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         {hasTargets
-          ? "Recommended from this Workspace's target Job Type and Competencies (Mandatory is always included)."
-          : "This Workspace has no target Job Type or Competencies — only Mandatory Achievements are recommended."}{" "}
+          ? "Recommended from this Workspace's target Job Type and Competencies (High-rated Achievements are always included)."
+          : "This Workspace has no target Job Type or Competencies — only High-rated Achievements are recommended."}{" "}
         Tick to include or exclude; click an Achievement to choose or write its wording.
       </p>
 
@@ -290,7 +290,7 @@ function AchievementRow({
               )}
             </div>
           </button>
-          <MandatoryBadge mandatory={a.mandatory} />
+          <RatingBadge rating={a.rating} />
         </div>
         {expanded && (
           <div className="border-t pt-3 space-y-3">

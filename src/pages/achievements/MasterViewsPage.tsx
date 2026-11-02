@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader, EmptyState } from "@/components/common/page-header";
-import { MandatoryBadge } from "@/components/common/status-badge";
+import { RatingBadge } from "@/components/common/status-badge";
+import type { AchievementRating } from "@/types/database";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -14,7 +15,7 @@ const UNASSIGNED = "__unassigned__";
 interface Row {
   achievementId: string;
   subject: string;
-  mandatory: boolean;
+  rating: AchievementRating;
   matchedWordingTexts: string[];
 }
 
@@ -56,7 +57,7 @@ export function MasterViewsPage() {
         .filter((w) => w.achievement_id === a.id && w.jobTypeIds.includes(jobTypeId))
         .map((w) => w.currentVersion?.text)
         .filter((t): t is string => !!t);
-      return { achievementId: a.id, subject: a.subject, mandatory: a.mandatory, matchedWordingTexts };
+      return { achievementId: a.id, subject: a.subject, rating: a.rating, matchedWordingTexts };
     });
 
     const companies = new Map<string, CompanyGroup>();
@@ -166,7 +167,7 @@ export function MasterViewsPage() {
                               <Link to={`/achievements/${row.achievementId}`} className="font-semibold text-sm text-foreground hover:underline">
                                 {row.subject}
                               </Link>
-                              {row.mandatory && <MandatoryBadge mandatory={row.mandatory} />}
+                              {row.rating !== "low" && <RatingBadge rating={row.rating} />}
                             </div>
 
                             {row.matchedWordingTexts.length > 0 ? (

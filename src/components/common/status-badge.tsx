@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { ApplicationStage, Status } from "@/types/database";
+import type { AchievementRating, ApplicationStage, Status } from "@/types/database";
 import { APPLICATION_STAGES } from "@/hooks/useJobApplications";
 
 export function StatusBadge({ status }: { status: Status }) {
@@ -10,8 +10,14 @@ export function StatusBadge({ status }: { status: Status }) {
   );
 }
 
-export function MandatoryBadge({ mandatory }: { mandatory: boolean }) {
-  return <Badge variant={mandatory ? "warning" : "outline"}>{mandatory ? "Mandatory" : "Optional"}</Badge>;
+const RATING_VARIANT: Record<AchievementRating, "warning" | "secondary" | "outline"> = {
+  high: "warning",
+  medium: "secondary",
+  low: "outline",
+};
+
+export function RatingBadge({ rating }: { rating: AchievementRating }) {
+  return <Badge variant={RATING_VARIANT[rating]}>{rating[0].toUpperCase() + rating.slice(1)}</Badge>;
 }
 
 const STAGE_VARIANT: Record<ApplicationStage, "outline" | "secondary" | "warning" | "success" | "destructive"> = {

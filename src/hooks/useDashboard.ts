@@ -4,8 +4,9 @@ import { supabase } from "@/lib/supabase";
 export interface DashboardCounts {
   activeWorkspaces: number;
   activeAchievements: number;
-  mandatoryAchievements: number;
-  optionalAchievements: number;
+  highAchievements: number;
+  mediumAchievements: number;
+  lowAchievements: number;
   masterWordings: number;
 }
 
@@ -13,18 +14,20 @@ export function useDashboardCounts() {
   return useQuery({
     queryKey: ["dashboard", "counts"],
     queryFn: async (): Promise<DashboardCounts> => {
-      const [workspaces, achievements, mandatory, optional, masterWordings] = await Promise.all([
+      const [workspaces, achievements, high, medium, low, masterWordings] = await Promise.all([
         supabase.from("cv_workspaces").select("id", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active").eq("mandatory", true),
-        supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active").eq("mandatory", false),
+        supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active").eq("rating", "high"),
+        supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active").eq("rating", "medium"),
+        supabase.from("achievements").select("id", { count: "exact", head: true }).eq("status", "active").eq("rating", "low"),
         supabase.from("master_wordings").select("id", { count: "exact", head: true }).eq("status", "active"),
       ]);
       return {
         activeWorkspaces: workspaces.count ?? 0,
         activeAchievements: achievements.count ?? 0,
-        mandatoryAchievements: mandatory.count ?? 0,
-        optionalAchievements: optional.count ?? 0,
+        highAchievements: high.count ?? 0,
+        mediumAchievements: medium.count ?? 0,
+        lowAchievements: low.count ?? 0,
         masterWordings: masterWordings.count ?? 0,
       };
     },
